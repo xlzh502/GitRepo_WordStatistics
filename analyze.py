@@ -6,9 +6,11 @@ import nltk
 from string import Template
 import pdb
 from DictStemmer import DictStemmer, NoWordInDict, COCAPosInfoNotExist, SkipThisWord
+import dpath.util
 
 
-logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
+#logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.CRITICAL)
 
 def getChapID(strs):
 	refer = {"I" : 1, "II" : 2, "III" : 3, "IV" : 4, "V" : 5, "VI" : 6, "VII" : 7, "VIII" : 8, "IX" : 9, "X" : 10, 
@@ -59,38 +61,38 @@ def getChapID(strs):
 pdb.set_trace() 
 
 
-'''
+
 NovelList = [
 						['Gone with the wind.txt', 'gbk'],
-						['pride and prejudice.txt', 'latin_1'],
+						['pride and prejudice.txt', 'gbk'],
 						['david copperfield.txt', 'utf-8-sig'],
-						['Emma.txt', 'latin_1'],
+						['Emma.txt', 'gbk'],
 						#['hard times.txt', 'utf-8-sig'], # 无法识别
-						['Jane Eyre.txt', 'latin_1'],
-						['lord jim.txt', 'latin_1'],
+						['Jane Eyre.txt', 'gbk'],
+						['lord jim.txt', 'gbk'],
 						['Mansfield Park.txt', 'iso8859_2'],
 						#['martin chuzzlewit.txt', 'latin_1'],  # 无法识别
-						['Northanger Abbey.txt', 'latin_1'],
-						['oliver twist.txt', 'latin_1'],
-						['Persuasion.txt', 'latin_1'],
-						['sense and sensibility.txt','latin_1'],
-						['Sister Carrie.txt','latin_1'],
-						['sons and lovers.txt','latin_1'],
-						#['Tess of the Urbervilles.txt','latin_1'],  # 无法识别
+						['Northanger Abbey.txt', 'gbk'],
+						['oliver twist.txt', 'gbk'],
+						['Persuasion.txt', 'gbk'],
+						['sense and sensibility.txt','gbk'],
+						['Sister Carrie.txt','gbk'],
+						['sons and lovers.txt','gbk'],
+						#['Tess of the Urbervilles.txt','gbk'],  # 无法识别
 						['the adventure of tom sawyer.txt','utf_8_sig'],
-						['The count of monte Cristo.txt','latin_1'],
-						['The genius.txt','latin_1'],
-						['the mayor of casterbridge.txt','latin_1'],
-						['the moonstone.txt','latin_1'],
+						['The count of monte Cristo.txt','gbk'],
+						['The genius.txt','gbk'],
+						['the mayor of casterbridge.txt','gbk'],
+						['the moonstone.txt','gbk'],
 						['the return of the native.txt','utf_8_sig'],
-						['Treasure Island.txt','latin_1'],
-						['Wuthering Heights.txt','latin_1']
+						['Treasure Island.txt','gbk'],
+						['Wuthering Heights.txt','gbk']
             ]
-'''
-NovelList = [
+
+'''NovelList = [
 						['Gone with the wind.txt', 'gbk'],
 						]
-
+'''
 def getChapMaps(bookName, enc):
 	chapContents = {}
 	lastChapId = None
@@ -180,5 +182,8 @@ for novelInfo in NovelList:
 				except SkipThisWord:
 					logging.info("(%s, ---)" % wordAndPos[0])
 					continue
-										
-					
+
+wordsToPrint = ['ignominious','wiggle', 'vicious', 'semblance', 'eloquence', 'listless', 'morose', 'grumble', 'appetite', 'scowl', 'tactics', 'shuffle','stubborn', 'disposition','jealous','ignominious']
+for word in wordsToPrint:
+	result = dpath.util.search(wordOccurrence, "/*/*/" + word + "/*")
+	print(result)
