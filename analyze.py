@@ -161,19 +161,24 @@ for novelInfo in NovelList:
 		for sent in sents:
 			tokens = nltk.word_tokenize(sent)
 			tokenPOS = nltk.pos_tag(tokens)
-			for tokenAndPos in tokenPOS:
+			logging.info(tokenPOS)
+			for wordAndPos in tokenPOS:
 				try:
-					(word, Pos) = stemmer.doStemming(tokenAndPos)
+					(word, Pos) = stemmer.doStemming(wordAndPos)
+					logging.info("(%s, %s)"%(word, Pos))
 					if (word not in wordOccurrence[bookName][chapId]):
 						wordOccurrence[bookName][chapId][word] = {}
 						wordOccurrence[bookName][chapId][word][Pos] = 1
 					else:
 						wordOccurrence[bookName][chapId][word][Pos] = wordOccurrence[bookName][chapId][word].get(Pos, 0) + 1
 				except NoWordInDict:
+					logging.error("(%s, %s) not in DICT"%(wordAndPos[0], wordAndPos[1]))
 					continue
 				except COCAPosInfoNotExist:
+					logging.error("(%s, %s) not have POS"%(wordAndPos[0], wordAndPos[1]))
 					continue
 				except SkipThisWord:
+					logging.info("(%s, ---)" % wordAndPos[0])
 					continue
 										
 					

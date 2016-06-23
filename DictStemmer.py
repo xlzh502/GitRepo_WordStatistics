@@ -363,8 +363,8 @@ WRB: Wh-adverb
 			 #'FW':	 #需要特别处理
 			 'IN':'i',
 			 'JJ':'j',
-			 'JJR':'r',
-			 'JJS':'r',
+			 'JJR':'j',
+			 'JJS':'j',
 			 'LS':'j',
 			 'MD':'v',
 			 'NN':'n',
@@ -444,6 +444,7 @@ WRB: Wh-adverb
 		]
 		
 		(word, Pos) = wordAndPos
+		word = word.lower()
 		if (Pos in longPos2ShortPos):
 			if (Pos in simpleStem and simpleStem[Pos] > 0):
 				if (word in self.cocaDict):
