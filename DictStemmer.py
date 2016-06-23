@@ -2,6 +2,7 @@
 from _thread import allocate_lock
 import re
 from string import Template
+import logging
 
 class NoWordInDict(ValueError):
 	"The word is not in Dict"
@@ -124,7 +125,7 @@ class DictStemmer(object):
 			elif (re.match(DictStemmer.secondLineR, line)):
 				self.__DictFile_2ndLine(line, currWord)
 			else:
-				print(line)
+				logging.warning("DICT line is not recognizable: %s" % line)
 				assert(0)
 		f.close()
 	
@@ -140,7 +141,7 @@ class DictStemmer(object):
 				self.cocaWordsInfo[curWord] = self.cocaWordsInfo.get(curWord,"") + pos
 				self.cocaWordsFreq[curWord + "$" + pos] = freq
 			else:
-				print(line)
+				logging.warning("COCA line is not recognizable: %s" % line)
 				assert(0)
 		f.close()
 				
@@ -152,9 +153,7 @@ class DictStemmer(object):
 				try:
 					p = self.LongPos2CocaPos[p]
 				except KeyError:
-					print(pos)
-					print(curWord)
-					print(chinese)
+					logging.warning("Can't map %s to (%s, %s)" % (chinese, curWord, pos))
 					continue
 				assert(len(p) == 1)
 			self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
@@ -182,7 +181,7 @@ class DictStemmer(object):
 				curWord = matchObj.group(0)
 				self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "G"
 			else:
-				print(line)
+				logging.warning("GRE line is not recognizable: %s" % line)
 				#assert(0)
 			line = next(f)
 			self.__analyzeMeaning(line, curWord)
@@ -209,7 +208,7 @@ class DictStemmer(object):
 				chinese = match2nd.group(3)
 				self.__analyzeMeaning(posDesc + chinese, curWord)
 			else:
-				print(line)
+				logging.warning("TOFEL line is not recognizable: %s" % line)
 				continue
 				#assert(0)
 
@@ -396,7 +395,8 @@ WRB: Wh-adverb
 			 #'\'\'':
 		}
 	
-		needStem = {
+		simpleStem = {
+		#做简单的变换，比如 名词复数变单数，形容词比较级最高级变原型，动词时态变动词标准型
 			 'CC':0,
 			 #'CD'
 			 'DT':0,
@@ -416,7 +416,7 @@ WRB: Wh-adverb
 			 #POS
 			 'PRP':0,
 			 'PRP$':0,
-			 'RB':1,
+			 'RB':0,
 			 'RBR':1, # 可按照jjr来处理
 			 'RBS':1, # 可按照jjs来处理
 			 'RP':0,
@@ -436,18 +436,46 @@ WRB: Wh-adverb
 			 #'\'\'':
 		}
 		
-		transferTab = {
-			
-		}
+		complexStem = [
+			['r', r'.+ly\b', r'j', r'ly\b'],
+			['j', r'.+ful\b', r'n', r'ful\b'],
+			['n', r'.+fulness\b', r'n|v|j', r'fulness\b'],
+			['n', r'.+ness\b', r'j', r'ness\b'],
+		]
 		
 		(word, Pos) = wordAndPos
 		if (Pos in longPos2ShortPos):
-			if (Pos in needStem and needStem[Pos] > 0):
+			if (Pos in simpleStem and simpleStem[Pos] > 0):
 				if (word in self.cocaDict):
-					word = self.cocaDict[word]
+					(oldword, word) = (word, self.cocaDict[word])
+					Pos = longPos2ShortPos[Pos]
+					logging.debug("(%s, %s) -> %s" % (oldword, Pos, word))
 				else:
 					raise NoWordInDict # "No Word avaiilable"
-			return (word,longPos2ShortPos[Pos])
+			else:
+				Pos = longPos2ShortPos[Pos]
+				
+			for trans in complexStem:
+				if (Pos == trans[0]  and  # 词性
+					 re.match(trans[1], word) and  # 匹配正则表达式
+					 re.sub(trans[3], "", word) in self.cocaDict and  # 将词缀抹去，该词在字典中
+					 re.match(trans[2], self.cocaWordsInfo.get(re.sub(trans[3], "", word), ""))
+					 ):
+					 	(oldword, word) = (word, re.sub(trans[3], "", word))
+					 	(oldPos, Pos) = (Pos, self.cocaWordsInfo.get(word, "")[0])
+					 	logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
+				elif (Pos == trans[0]  and  # 词性
+				   re.match(trans[1], word) and  # 匹配正则表达式
+				   word in self.cocaDict and  # 存在词转换映射
+				   re.match(trans[2], self.cocaWordsInfo.get(self.cocaDict[word], "")) and # 转换词满足词性
+				   not re.match(trans[1], self.cocaDict[word]) # 词缀 在 转换词中已经被去掉了 
+				   ):
+					(oldword, word) = (word, self.cocaDict[word])
+					(oldPos, Pos) = (Pos, self.cocaWordsInfo.get(word, "")[0])
+					logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
+				else:
+					continue
+			return (word, Pos)
 		elif (Pos == 'FW'):
 			if (word in self.cocaDict or word in self.cocaMainWord):
 				Pos = self.cocaWordsInfo.get(word, "")

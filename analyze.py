@@ -1,12 +1,15 @@
 # coding=gbk
 
+import logging
 import re
 import nltk
 from string import Template
 import pdb
 from DictStemmer import DictStemmer, NoWordInDict, COCAPosInfoNotExist, SkipThisWord
 
-	
+
+logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
+
 def getChapID(strs):
 	refer = {"I" : 1, "II" : 2, "III" : 3, "IV" : 4, "V" : 5, "VI" : 6, "VII" : 7, "VIII" : 8, "IX" : 9, "X" : 10, 
          "XI" : 11, "XII" : 12, "XIII" : 13, "XIV" : 14, "XV" : 15, "XVI" : 16, "XVII" : 17, "XVIII" : 18, "XIX" : 19, "XX" : 20, 
@@ -41,12 +44,22 @@ def getChapID(strs):
 	if re.match(breakReXp, strs, re.M| re.S | re.VERBOSE):
 		volId, chapId = re.findall(breakReXp, strs, re.M| re.S | re.VERBOSE)[0]
 
-	return (refer[volId], refer[chapId])
+	if (volId in refer.keys()):
+		volId = refer[volId]
+	else:
+		volId = int(volId)
+	
+	if (chapId in refer.keys()):
+		chapId = refer[chapId]
+	else:
+		chapId = int(chapId)
+
+	return (volId, chapId)
 
 pdb.set_trace() 
 
 
-
+'''
 NovelList = [
 						['Gone with the wind.txt', 'gbk'],
 						['pride and prejudice.txt', 'latin_1'],
@@ -73,7 +86,10 @@ NovelList = [
 						['Treasure Island.txt','latin_1'],
 						['Wuthering Heights.txt','latin_1']
             ]
-
+'''
+NovelList = [
+						['Gone with the wind.txt', 'gbk'],
+						]
 
 def getChapMaps(bookName, enc):
 	chapContents = {}
@@ -101,8 +117,6 @@ def getChapMaps(bookName, enc):
 	breakRe=re.compile(breakReXp, re.M | re.S | re.VERBOSE)
 	chapList=re.split(breakRe, raw)
 	
-	outputFile=open("c:\\GRE 词频统计\\result.txt", "wt")
-	
 	for chap in chapList:
 		volId, chapId = getChapID(chap)
 		if (chapId != None):
@@ -112,12 +126,11 @@ def getChapMaps(bookName, enc):
 		elif (lastChapId != None):
 			# handle chapter contents
 			if (lastVolId != None):
-				chapContents[lastVolId + '.' + lastChapId] = chap
+				chapContents[float(str(lastVolId) + '.' + str(lastChapId))] = chap
 			else:
 				chapContents[lastChapId] = chap
 		else:
 			continue
-	outputFile.close()
 	return chapContents
 	
 	
