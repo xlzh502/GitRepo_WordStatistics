@@ -61,7 +61,7 @@ def getChapID(strs):
 pdb.set_trace() 
 
 
-
+'''
 NovelList = [
 						['Gone with the wind.txt', 'gbk'],
 						['pride and prejudice.txt', 'gbk'],
@@ -88,11 +88,11 @@ NovelList = [
 						['Treasure Island.txt','gbk'],
 						['Wuthering Heights.txt','gbk']
             ]
-
-'''NovelList = [
+'''
+NovelList = [
 						['Gone with the wind.txt', 'gbk'],
 						]
-'''
+
 def getChapMaps(bookName, enc):
 	chapContents = {}
 	lastChapId = None
@@ -155,9 +155,8 @@ wordOccurrence = {}
 for novelInfo in NovelList:
 	chapContents = getChapMaps(novelInfo[0], novelInfo[1])
 	bookName = re.sub(r"\.txt", "", novelInfo[0])
-	wordOccurrence[bookName] = {}
+	
 	for chapId in sorted(chapContents.keys()):
-		wordOccurrence[bookName][chapId] = {}
 		chap = chapContents[chapId]
 		sents = nltk.sent_tokenize(chap)
 		for sent in sents:
@@ -168,11 +167,16 @@ for novelInfo in NovelList:
 				try:
 					(word, Pos) = stemmer.doStemming(wordAndPos)
 					logging.info("(%s, %s)"%(word, Pos))
-					if (word not in wordOccurrence[bookName][chapId]):
-						wordOccurrence[bookName][chapId][word] = {}
-						wordOccurrence[bookName][chapId][word][Pos] = 1
+					if (word not in wordOccurrence):
+						wordOccurrence[word] = {}
+					if (Pos not in wordOccurrence[word]):
+						wordOccurrence[word][Pos] = {}
+					if (bookName not in wordOccurrence[word][Pos]):
+						wordOccurrence[word][Pos][bookName] = {}
+					if (chapId not in wordOccurrence[word][Pos][bookName]):
+						wordOccurrence[word][Pos][bookName][chapId] = 1
 					else:
-						wordOccurrence[bookName][chapId][word][Pos] = wordOccurrence[bookName][chapId][word].get(Pos, 0) + 1
+						wordOccurrence[word][Pos][bookName][chapId] += 1
 				except NoWordInDict:
 					logging.error("(%s, %s) not in DICT"%(wordAndPos[0], wordAndPos[1]))
 					continue
@@ -183,7 +187,14 @@ for novelInfo in NovelList:
 					logging.info("(%s, ---)" % wordAndPos[0])
 					continue
 
-wordsToPrint = ['ignominious','wiggle', 'vicious', 'semblance', 'eloquence', 'listless', 'morose', 'grumble', 'appetite', 'scowl', 'tactics', 'shuffle','stubborn', 'disposition','jealous','ignominious']
+wordsToPrint = ['ignominious','wiggle', 'vicious', 'semblance', 'eloquence', 'listless', 'morose', 'grumble', 'appetite', 'scowl', 'tactics', 'shuffle','stubborn', 'disposition','jealous']
 for word in wordsToPrint:
-	result = dpath.util.search(wordOccurrence, "/*/*/" + word + "/*")
+	result = dpath.util.search(wordOccurrence, "/"+word+"/*/*/*")
 	print(result)
+	if (word not in wordOccurrence):
+		continue
+	for Pos in wordOccurrence[word]:
+		for bookName in wordOccurrence[word][Pos]:
+			print("(%s, %s, %s) = %d" % (word, Pos, bookName, sum(dpath.util.values(wordOccurrence, "/" + word + "/" + Pos + "/" + bookName + "/*"))))
+			for chapId in wordOccurrence[word][Pos][bookName]:
+				print("(%s, %s, %s, %s) = %d" % (word, Pos, bookName, str(chapId), sum(dpath.util.values(wordOccurrence, "/" + word + "/" + Pos + "/" + bookName + "/" + str(chapId)))))
