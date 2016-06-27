@@ -62,7 +62,7 @@ def getChapID(strs):
 pdb.set_trace() 
 
 
-'''
+
 NovelList = [
 						['Gone with the wind.txt', 'gbk'],
 						['pride and prejudice.txt', 'gbk'],
@@ -89,10 +89,12 @@ NovelList = [
 						['Treasure Island.txt','gbk'],
 						['Wuthering Heights.txt','gbk']
             ]
+
 '''
 NovelList = [
 						['Gone with the wind.txt', 'gbk'],
 						]
+'''
 
 def getChapMaps(bookName, enc):
 	chapContents = {}
@@ -151,14 +153,24 @@ def enumerateDic(dic):
 			yield curItem
 			unpack = iterator
 
-
+def updateBookChapWords(bookChapWords, bookName, chapId, word, Pos):
+	if (bookName not in bookChapWords):
+		bookChapWords[bookName] = {}
+	if (chapId not in bookChapWords[bookName]):
+		bookChapWords[bookName][chapId] = {}
+	if (word not in bookChapWords[bookName][chapId]):
+		bookChapWords[bookName][chapId][word] = {}
+	if (Pos not in bookChapWords[bookName][chapId][word]):
+		bookChapWords[bookName][chapId][word][Pos] = 0
 
 stemmer = DictStemmer()
-wordOccurrence = {}
+
+#本来，我是打算使用dpath.util.search的，但是发现，执行起来非常慢。所以，只能用wordOccurrence、chapContains来统计信息了。
+wordOccurrence = {}  # 统计各个词 在每本书的每一章 出现的次数
+bookChapWords = {}  # 统计每本书的每一章， 出现了哪些单词
 for novelInfo in NovelList:
 	chapContents = getChapMaps(novelInfo[0], novelInfo[1])
 	bookName = re.sub(r"\.txt", "", novelInfo[0])
-	
 	for chapId in sorted(chapContents.keys()):
 		chap = chapContents[chapId]
 		sents = nltk.sent_tokenize(chap)
@@ -180,6 +192,7 @@ for novelInfo in NovelList:
 						wordOccurrence[word][Pos][bookName][chapId] = 1
 					else:
 						wordOccurrence[word][Pos][bookName][chapId] += 1
+					updateBookChapWords(bookChapWords, bookName, chapId, word, Pos)
 				except NoWordInDict:
 					logging.error("(%s, %s) not in DICT"%(wordAndPos[0], wordAndPos[1]))
 					continue
@@ -193,22 +206,18 @@ for novelInfo in NovelList:
 #wordsToPrint = [
 #'ignominious','wiggle', 'vicious', 'semblance', 'eloquence', 'listless', 'morose', 'grumble', 'appetite', 'scowl', 'tactics', 'shuffle','stubborn', 'disposition','jealous',
 #]
+#wordsToPrint = [ word for word in stemmer.wordsInfo if re.search("G|T", stemmer.wordsInfo[word]) ]
 
-wordsToPrint = [ word for word in stemmer.wordsInfo if re.search("G|T", stemmer.wordsInfo[word]) ]
 occurCounts = {}
-
 starttime = datetime.now()
-for word in wordsToPrint:
-	if (word not in wordOccurrence):
-		occurCounts[word] = 0
-		continue
+for word in wordOccurrence:
 	occurCounts[word] = sum(enumerateDic(wordOccurrence[word]))
-	
-for word in sorted(wordsToPrint, key = occurCounts.__getitem__):
-	if (word not in wordOccurrence):
-		continue
-	for Pos in wordOccurrence[word]:
-		for bookName in wordOccurrence[word][Pos]:
-			print("(%s, %s, %s) = %d" % (word, Pos, bookName, sum(enumerateDic(wordOccurrence[word][Pos][bookName]))))
-			for chapId in sorted(wordOccurrence[word][Pos][bookName]):
-				print("(%s, %s, %s, %s) = %d" % (word, Pos, bookName, str(chapId), wordOccurrence[word][Pos][bookName][chapId]))
+
+
+for bookName in bookChapWords:
+	for chap in sorted(bookChapWords[bookName]):
+		wordsToPrint = [ word for word in bookChapWords[bookName][chap] if re.search("G", stemmer.wordsInfo.get(word, "")) ]
+		for word in sorted(wordsToPrint, key = occurCounts.__getitem__):
+			for Pos in bookChapWords[bookName][chap][word]:
+				logging.critical("(%s, %s, %s, %s) = [%d, %d, %d]" % (word, Pos, bookName, str(chap), occurCounts[word], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap]))
+
