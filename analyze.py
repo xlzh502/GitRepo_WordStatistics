@@ -7,7 +7,8 @@ from string import Template
 import pdb
 from DictStemmer import DictStemmer, NoWordInDict, COCAPosInfoNotExist, SkipThisWord
 import dpath.util
-
+from datetime import datetime
+import itertools
 
 #logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.CRITICAL)
@@ -136,17 +137,19 @@ def getChapMaps(bookName, enc):
 	return chapContents
 	
 	
-
-
-
-#stemmer = DictStemmer()
-#outputFile.write("volId={}, chapId=P{}\n".format(lastVolId, lastChapId))
-#			sents = nltk.sent_tokenize(chap)
-#			for sent in sents:
-#				tokens = nltk.word_tokenize(sent)
-#				tokenPOS = nltk.pos_tag(tokens)
-#				outputFile.write(str(tokenPOS))
-#				outputFile.write("\n")
+def enumerateDic(dic):
+	unpack = [i for i in dic.values()]
+	while (1):
+		iterator = iter(unpack)
+		try:
+			curItem = next(iterator)
+		except StopIteration:
+			break
+		if (hasattr(curItem, "__iter__")):
+			unpack = itertools.chain(curItem.values(), iterator)
+		else:
+			yield curItem
+			unpack = iterator
 
 
 
@@ -187,14 +190,25 @@ for novelInfo in NovelList:
 					logging.info("(%s, ---)" % wordAndPos[0])
 					continue
 
-wordsToPrint = ['ignominious','wiggle', 'vicious', 'semblance', 'eloquence', 'listless', 'morose', 'grumble', 'appetite', 'scowl', 'tactics', 'shuffle','stubborn', 'disposition','jealous']
+#wordsToPrint = [
+#'ignominious','wiggle', 'vicious', 'semblance', 'eloquence', 'listless', 'morose', 'grumble', 'appetite', 'scowl', 'tactics', 'shuffle','stubborn', 'disposition','jealous',
+#]
+
+wordsToPrint = [ word for word in stemmer.wordsInfo if re.search("G|T", stemmer.wordsInfo[word]) ]
+occurCounts = {}
+
+starttime = datetime.now()
 for word in wordsToPrint:
-	result = dpath.util.search(wordOccurrence, "/"+word+"/*/*/*")
-	print(result)
+	if (word not in wordOccurrence):
+		occurCounts[word] = 0
+		continue
+	occurCounts[word] = sum(enumerateDic(wordOccurrence[word]))
+	
+for word in sorted(wordsToPrint, key = occurCounts.__getitem__):
 	if (word not in wordOccurrence):
 		continue
 	for Pos in wordOccurrence[word]:
 		for bookName in wordOccurrence[word][Pos]:
-			print("(%s, %s, %s) = %d" % (word, Pos, bookName, sum(dpath.util.values(wordOccurrence, "/" + word + "/" + Pos + "/" + bookName + "/*"))))
-			for chapId in wordOccurrence[word][Pos][bookName]:
-				print("(%s, %s, %s, %s) = %d" % (word, Pos, bookName, str(chapId), sum(dpath.util.values(wordOccurrence, "/" + word + "/" + Pos + "/" + bookName + "/" + str(chapId)))))
+			print("(%s, %s, %s) = %d" % (word, Pos, bookName, sum(enumerateDic(wordOccurrence[word][Pos][bookName]))))
+			for chapId in sorted(wordOccurrence[word][Pos][bookName]):
+				print("(%s, %s, %s, %s) = %d" % (word, Pos, bookName, str(chapId), wordOccurrence[word][Pos][bookName][chapId]))
