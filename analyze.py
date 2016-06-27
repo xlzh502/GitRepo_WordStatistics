@@ -162,6 +162,18 @@ def updateBookChapWords(bookChapWords, bookName, chapId, word, Pos):
 		bookChapWords[bookName][chapId][word] = {}
 	if (Pos not in bookChapWords[bookName][chapId][word]):
 		bookChapWords[bookName][chapId][word][Pos] = 0
+		
+def updateWordOccurence(wordOccurrence, word, Pos, bookName, chap):
+	if (word not in wordOccurrence):
+		wordOccurrence[word] = {}
+	if (Pos not in wordOccurrence[word]):
+		wordOccurrence[word][Pos] = {}
+	if (bookName not in wordOccurrence[word][Pos]):
+		wordOccurrence[word][Pos][bookName] = {}
+	if (chapId not in wordOccurrence[word][Pos][bookName]):
+		wordOccurrence[word][Pos][bookName][chapId] = 1
+	else:
+		wordOccurrence[word][Pos][bookName][chapId] += 1
 
 stemmer = DictStemmer()
 
@@ -182,16 +194,7 @@ for novelInfo in NovelList:
 				try:
 					(word, Pos) = stemmer.doStemming(wordAndPos)
 					logging.info("(%s, %s)"%(word, Pos))
-					if (word not in wordOccurrence):
-						wordOccurrence[word] = {}
-					if (Pos not in wordOccurrence[word]):
-						wordOccurrence[word][Pos] = {}
-					if (bookName not in wordOccurrence[word][Pos]):
-						wordOccurrence[word][Pos][bookName] = {}
-					if (chapId not in wordOccurrence[word][Pos][bookName]):
-						wordOccurrence[word][Pos][bookName][chapId] = 1
-					else:
-						wordOccurrence[word][Pos][bookName][chapId] += 1
+					updateWordOccurence(wordOccurrence, word, Pos, bookName, chapId)
 					updateBookChapWords(bookChapWords, bookName, chapId, word, Pos)
 				except NoWordInDict:
 					logging.error("(%s, %s) not in DICT"%(wordAndPos[0], wordAndPos[1]))
