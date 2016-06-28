@@ -10,8 +10,8 @@ import dpath.util
 from datetime import datetime
 import itertools
 
-#logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.CRITICAL)
+logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
+#logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.CRITICAL)
 
 def getChapID(strs):
 	refer = {"I" : 1, "II" : 2, "III" : 3, "IV" : 4, "V" : 5, "VI" : 6, "VII" : 7, "VIII" : 8, "IX" : 9, "X" : 10, 
@@ -175,12 +175,17 @@ def updateWordOccurence(wordOccurrence, word, Pos, bookName, chap):
 	else:
 		wordOccurrence[word][Pos][bookName][chapId] += 1
 
+
+starttime = datetime.now()
 stemmer = DictStemmer()
+endtime = datetime.now()
+logging.info("Stemmer initialized: %d s" % (endtime - starttime).seconds)
 
 #本来，我是打算使用dpath.util.search的，但是发现，执行起来非常慢。所以，只能用wordOccurrence、chapContains来统计信息了。
 wordOccurrence = {}  # 统计各个词 在每本书的每一章 出现的次数
 bookChapWords = {}  # 统计每本书的每一章， 出现了哪些单词
 for novelInfo in NovelList:
+	starttime = datetime.now()
 	chapContents = getChapMaps(novelInfo[0], novelInfo[1])
 	bookName = re.sub(r"\.txt", "", novelInfo[0])
 	for chapId in sorted(chapContents.keys()):
@@ -205,22 +210,19 @@ for novelInfo in NovelList:
 				except SkipThisWord:
 					logging.info("(%s, ---)" % wordAndPos[0])
 					continue
-
-#wordsToPrint = [
-#'ignominious','wiggle', 'vicious', 'semblance', 'eloquence', 'listless', 'morose', 'grumble', 'appetite', 'scowl', 'tactics', 'shuffle','stubborn', 'disposition','jealous',
-#]
-#wordsToPrint = [ word for word in stemmer.wordsInfo if re.search("G|T", stemmer.wordsInfo[word]) ]
+	endtime = datetime.now()
+	logging.info("Handing novel <%s>: %d s" % (bookName, (endtime - starttime).seconds))
 
 occurCounts = {}
-starttime = datetime.now()
 for word in wordOccurrence:
 	occurCounts[word] = sum(enumerateDic(wordOccurrence[word]))
 
-
+starttime = datetime.now()
 for bookName in bookChapWords:
 	for chap in sorted(bookChapWords[bookName]):
 		wordsToPrint = [ word for word in bookChapWords[bookName][chap] if re.search("G", stemmer.wordsInfo.get(word, "")) ]
 		for word in sorted(wordsToPrint, key = occurCounts.__getitem__):
 			for Pos in bookChapWords[bookName][chap][word]:
 				logging.critical("(%s, %s, %s, %s) = [%d, %d, %d]" % (word, Pos, bookName, str(chap), occurCounts[word], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap]))
-
+endtime = datetime.now()
+logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
