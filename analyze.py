@@ -98,7 +98,9 @@ NovelList = [
 
 NovelList = [
 						['Tess of the Urbervilles.txt','gbk'],
+						['The sun also rises.txt', 'gbk'],
 						]
+
 
 def chapVolId(chapId, volId = None, encoding = 0):
 	if (encoding != 0):
@@ -208,6 +210,7 @@ for novelInfo in NovelList:
 	starttime = datetime.now()
 	chapContents = getChapMaps(novelInfo[0], novelInfo[1])
 	bookName = re.sub(r"\.txt", "", novelInfo[0])
+	print("handling %s, %d of %d" % (bookName, NovelList.index(novelInfo) + 1, len(NovelList)))
 	for chapId in sorted(chapContents.keys()):
 		chap = chapContents[chapId]
 		sents = nltk.sent_tokenize(chap)
@@ -249,17 +252,23 @@ logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
 
 # 计算出现的词汇，占GRE词汇的覆盖率
-wordsToCalculate = [ word for word in stemmer.wordsInfo if re.search("G", stemmer.wordsInfo[word]) ]
-wordsInNovel = {}
-wordsInNovels = {}
+wordsToCalculate = set(word for word in stemmer.wordsInfo if re.search("G", stemmer.wordsInfo[word]))
+wordsInNovel = set()
+wordsInNovels = set()
 for bookName in bookChapWords:
 	wordsInNovel.clear()
 	for chap in sorted(bookChapWords[bookName]):
 		for word in bookChapWords[bookName][chap]:
 			if (word not in wordsToCalculate):
 				continue
-			wordsInNovel[word] = 0
-			wordsInNovels[word] = 0
+			wordsInNovel.add(word)
+			wordsInNovels.add(word)
 		logging.critical("(%s, %s)  %.2f%%" % (bookName, chapVolId(chap), len(wordsInNovel)/len(wordsToCalculate)*100))
 	logging.critical("%s %.2f%%" % (bookName, len(wordsInNovels) / len(wordsToCalculate)*100))
+
+# 哪些词在所有小说中，都没有出现过
+wordsNotOccur = wordsToCalculate - wordsInNovels
+logging.critical("words that don't show in any novels")
+for word in wordsNotOccur:
+	logging.critical("%s" % word)
 
