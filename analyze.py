@@ -66,20 +66,20 @@ pdb.set_trace()
 NovelList = [
 						['Gone with the wind.txt', 'gbk'],
 						['pride and prejudice.txt', 'gbk'],
-						['david copperfield.txt', 'utf-8-sig'],
+						['david copperfield.txt', 'utf_8_sig'],
 						['Emma.txt', 'gbk'],
-						#['hard times.txt', 'utf-8-sig'], # 无法识别
+						['hard times.txt', 'utf_8_sig'], 
 						['Jane Eyre.txt', 'gbk'],
 						['lord jim.txt', 'gbk'],
 						['Mansfield Park.txt', 'iso8859_2'],
-						#['martin chuzzlewit.txt', 'latin_1'],  # 无法识别
+						['martin chuzzlewit.txt', 'latin_1'],
 						['Northanger Abbey.txt', 'gbk'],
 						['oliver twist.txt', 'gbk'],
 						['Persuasion.txt', 'gbk'],
 						['sense and sensibility.txt','gbk'],
 						['Sister Carrie.txt','gbk'],
 						['sons and lovers.txt','gbk'],
-						#['Tess of the Urbervilles.txt','gbk'],  # 无法识别
+						['Tess of the Urbervilles.txt','gbk'],
 						['the adventure of tom sawyer.txt','utf_8_sig'],
 						['The count of monte Cristo.txt','gbk'],
 						['The genius.txt','gbk'],
@@ -87,14 +87,32 @@ NovelList = [
 						['the moonstone.txt','gbk'],
 						['the return of the native.txt','utf_8_sig'],
 						['Treasure Island.txt','gbk'],
-						['Wuthering Heights.txt','gbk']
+						['Wuthering Heights.txt','gbk'],
+						['the Adventures of Huckleberry Finn.txt', 'utf_8_sig'],
+						['Lost Horizon.txt', 'latin_1'],
+						['The sun also rises.txt', 'gbk'],
+						['The old man and the sea.txt', 'utf_8_sig'],	
+						['The Life of the Bee.txt', 'utf_8_sig'],	
             ]
 
-'''
+
 NovelList = [
-						['Gone with the wind.txt', 'gbk'],
+						['Tess of the Urbervilles.txt','gbk'],
 						]
-'''
+
+def chapVolId(chapId, volId = None, encoding = 0):
+	if (encoding != 0):
+		if (volId != None):
+			return volId * 1000 + chapId
+		else:
+			return chapId
+	else:
+		volId = chapId // 1000
+		chapId = chapId % 1000
+		if (volId == 0):
+			return str(chapId)
+		else:
+			return str(volId) + "." + str(chapId)
 
 def getChapMaps(bookName, enc):
 	chapContents = {}
@@ -131,9 +149,11 @@ def getChapMaps(bookName, enc):
 		elif (lastChapId != None):
 			# handle chapter contents
 			if (lastVolId != None):
-				chapContents[float(str(lastVolId) + '.' + str(lastChapId))] = chap
+				# if we have book II  chap 10, then we need 2.10, but in float format, 2.10 == 2.1, which will introduce confusion
+				# so save (volId, chapId) in format like:  volId * 1000 + chapId
+				chapContents[chapVolId(lastChapId, lastVolId, encoding = 1)] = chap
 			else:
-				chapContents[lastChapId] = chap
+				chapContents[chapVolId(lastChapId, encoding = 1)] = chap
 		else:
 			continue
 	return chapContents
@@ -223,6 +243,23 @@ for bookName in bookChapWords:
 		wordsToPrint = [ word for word in bookChapWords[bookName][chap] if re.search("G", stemmer.wordsInfo.get(word, "")) ]
 		for word in sorted(wordsToPrint, key = occurCounts.__getitem__):
 			for Pos in bookChapWords[bookName][chap][word]:
-				logging.critical("(%s, %s, %s, %s) = [%d, %d, %d]" % (word, Pos, bookName, str(chap), occurCounts[word], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap]))
+				logging.critical("(%s, %s, %s, %s) = [%d, %d, %d]" % (word, Pos, bookName, chapVolId(chap), occurCounts[word], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap]))
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
+
+
+# 计算出现的词汇，占GRE词汇的覆盖率
+wordsToCalculate = [ word for word in stemmer.wordsInfo if re.search("G", stemmer.wordsInfo[word]) ]
+wordsInNovel = {}
+wordsInNovels = {}
+for bookName in bookChapWords:
+	wordsInNovel.clear()
+	for chap in sorted(bookChapWords[bookName]):
+		for word in bookChapWords[bookName][chap]:
+			if (word not in wordsToCalculate):
+				continue
+			wordsInNovel[word] = 0
+			wordsInNovels[word] = 0
+		logging.critical("(%s, %s)  %.2f%%" % (bookName, chapVolId(chap), len(wordsInNovel)/len(wordsToCalculate)*100))
+	logging.critical("%s %.2f%%" % (bookName, len(wordsInNovels) / len(wordsToCalculate)*100))
+
