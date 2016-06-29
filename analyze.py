@@ -95,12 +95,12 @@ NovelList = [
 						['The Life of the Bee.txt', 'utf_8_sig'],	
             ]
 
-
+'''
 NovelList = [
 						['Tess of the Urbervilles.txt','gbk'],
 						['The sun also rises.txt', 'gbk'],
 						]
-
+'''
 
 def chapVolId(chapId, volId = None, encoding = 0):
 	if (encoding != 0):
@@ -253,18 +253,34 @@ logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
 # 计算出现的词汇，占GRE词汇的覆盖率
 wordsToCalculate = set(word for word in stemmer.wordsInfo if re.search("G", stemmer.wordsInfo[word]))
-wordsInNovel = set()
+wordsInNovel = {}
 wordsInNovels = set()
 for bookName in bookChapWords:
-	wordsInNovel.clear()
+	wordsInNovel[bookName] = set()
 	for chap in sorted(bookChapWords[bookName]):
 		for word in bookChapWords[bookName][chap]:
 			if (word not in wordsToCalculate):
 				continue
-			wordsInNovel.add(word)
+			wordsInNovel[bookName].add(word)
 			wordsInNovels.add(word)
-		logging.critical("(%s, %s)  %.2f%%" % (bookName, chapVolId(chap), len(wordsInNovel)/len(wordsToCalculate)*100))
+		logging.critical("(%s, %s)  %.2f%%" % (bookName, chapVolId(chap), len(wordsInNovel[bookName])/len(wordsToCalculate)*100))
 	logging.critical("%s %.2f%%" % (bookName, len(wordsInNovels) / len(wordsToCalculate)*100))
+
+
+logging.critical("words intersection relationship: (novel1, novel2) = (wordset1, wordset2, wordset1 | wordset2, wordset1 & wordset2)")
+books = [book for book in wordsInNovel.keys()]
+bookData = [info for info in wordsInNovel.values()]
+for i in range(len(wordsInNovel)):
+	for j in range(i+1, len(wordsInNovel)):
+		book_1 = books[i]
+		book_2 = books[j]
+		logging.critical("(%s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%)" % (book_1, 
+																															book_2,
+																														  len(bookData[i])/len(wordsToCalculate)*100,
+																														  len(bookData[j])/len(wordsToCalculate)*100,
+																														  len(bookData[i] | bookData[j])/len(wordsToCalculate)*100,
+																														  len(bookData[i] & bookData[j])/len(wordsToCalculate)*100))
+																														  
 
 # 哪些词在所有小说中，都没有出现过
 wordsNotOccur = wordsToCalculate - wordsInNovels
