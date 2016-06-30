@@ -48,10 +48,10 @@ class DictStemmer(object):
 	GrePosR=r"(?:adj|adv|vt|vi|v|n|prep|conj|a)[\.]?"
 	GrePosDescR=Template(r'''$GrePosR(?:[/]$GrePosR)*''').substitute(locals())
 	GreChineseR=r"(?:[^a-zA-Z\.]+)"
-	Gre1stLineR=wordR
+	Gre1stLineR=Template(r'''$wordR$$''').substitute(locals())
 	Gre2ndLineR=Template(r'''($GrePosDescR)($GreChineseR)''').substitute(locals())
 	
-	TofelPosR=r"(?:adj|adv|vt|vi|v|n|prep|conj)\."
+	TofelPosR=r"(?:adj|adv|vt|vi|v|n|prep|conj)[\.]?"
 	TofelPosDescR=Template(r'''$TofelPosR(?:[/]$TofelPosR)*''').substitute(locals())
 	Tofel1stLineR=Template(r'''($digitR)$spaceR($wordR)$spaceR($TofelPosDescR)$spaceR([^a-zA-Z]+)''').substitute(locals())
 	Tofel2ndLineR=Template(r'''($digitR)$spaceR($TofelPosDescR)$spaceR([^a-zA-Z]+)''').substitute(locals())
@@ -143,7 +143,8 @@ class DictStemmer(object):
 				curWord = matchObj.group(2)
 				freq = matchObj.group(1)
 				pos = matchObj.group(3)
-				self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "C"
+				#self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "C"
+				self.wordsInfo[curWord + "$" + pos] = self.wordsInfo.get(curWord + "$" + pos,"") + "C"
 				self.cocaWordsInfo[curWord] = self.cocaWordsInfo.get(curWord,"") + pos
 				self.cocaWordsFreq[curWord + "$" + pos] = freq
 			else:
@@ -151,7 +152,7 @@ class DictStemmer(object):
 				assert(0)
 		f.close()
 				
-	def __doMap(self, pos, chinese, curWord):
+	def __doMap(self, pos, chinese, curWord, comment):
 		posRe = r"([a-zA-Z]+)"
 		posList = re.findall(posRe, pos)
 		for p in posList:
@@ -163,9 +164,10 @@ class DictStemmer(object):
 					continue
 				assert(len(p) == 1)
 			self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
+			self.wordsInfo[curWord + "$" + p] = self.wordsInfo.get(curWord + "$" + p,"") + comment
 		
 	
-	def __analyzeMeaning(self, line, curWord):
+	def __analyzeMeaning(self, line, curWord, comment):
 		posRe = r"[a-zA-Z\./]+"
 		chineseRe = r"(?:[^a-zA-Z\.]+)"
 		itemsR = Template(r'''($posRe)($chineseRe)''').substitute(locals())
@@ -175,7 +177,7 @@ class DictStemmer(object):
 		for item in lineItems:
 			pos = item[0]
 			chinese = item[1]
-			self.__doMap(pos, chinese, curWord)
+			self.__doMap(pos, chinese, curWord, comment)
 
 	
 	def __readGre(self):
@@ -185,9 +187,9 @@ class DictStemmer(object):
 			match2ndLine = re.match(DictStemmer.Gre2ndLineR, line)
 			if (match1stLine):
 				curWord = match1stLine.group(0)
-				self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "G"
+				#self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "G"
 			elif (match2ndLine):
-				self.__analyzeMeaning(line, curWord)
+				self.__analyzeMeaning(line, curWord, "G")
 			else:
 				logging.warning("GRE line is not recognizable: %s" % line)
 		f.close()
@@ -203,15 +205,16 @@ class DictStemmer(object):
 				curLineNum = match1st.group(1)
 				posDesc = match1st.group(3)
 				chinese = match1st.group(4)
-				self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "T"
-				self.__analyzeMeaning(posDesc + chinese, curWord)
+				#self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "T"
+				self.__analyzeMeaning(posDesc + chinese, curWord,  "T")
 			elif (match2nd):
 				#if (curLineNum != match2nd.group(1)):
 				#	print(line + "------")
 				assert(curLineNum == match2nd.group(1))
 				posDesc = match2nd.group(2)
 				chinese = match2nd.group(3)
-				self.__analyzeMeaning(posDesc + chinese, curWord)
+				#self.__analyzeMeaning(posDesc + chinese, curWord)
+				self.__analyzeMeaning(posDesc + chinese, curWord, "T")
 			else:
 				logging.warning("TOFEL line is not recognizable: %s" % line)
 				continue
