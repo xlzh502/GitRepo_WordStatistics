@@ -71,7 +71,7 @@ NovelList = [
 						['hard times.txt', 'utf_8_sig'], 
 						['Jane Eyre.txt', 'gbk'],
 						['lord jim.txt', 'gbk'],
-						['Mansfield Park.txt', 'iso8859_2'],
+						['Mansfield Park.txt', 'latin_1'],
 						['martin chuzzlewit.txt', 'latin_1'],
 						['Northanger Abbey.txt', 'gbk'],
 						['oliver twist.txt', 'gbk'],
@@ -99,7 +99,7 @@ NovelList = [
 
 '''
 NovelList = [
-						['Tess of the Urbervilles.txt','gbk'],
+						['Mansfield Park.txt', 'latin_1'],
 						['Agnes Grey.txt', 'utf_8_sig'],
 						]
 '''
@@ -242,10 +242,11 @@ for word in wordOccurrence:
 		occurCounts[word+"$"+Pos] = sum(enumerateDic(wordOccurrence[word][Pos]))
 
 starttime = datetime.now()
-wordsInterested = set(wordPos for wordPos in stemmer.wordsInfo if re.search("G", stemmer.wordsInfo[wordPos]))
+wordPosInterested = set(wordPos for wordPos in stemmer.wordsInfo if re.search("G|T", stemmer.wordsInfo[wordPos]))
+wordsInterested = set(re.split(r"[$]", wordPos)[0] for wordPos in wordPosInterested)
 for bookName in bookChapWords:
 	for chap in sorted(bookChapWords[bookName]):
-		wordsToPrint =  set(wordPos for wordPos in bookChapWords[bookName][chap])  & wordsInterested
+		wordsToPrint =  set(wordPos for wordPos in bookChapWords[bookName][chap])  & wordPosInterested
 		for wordPos in sorted(wordsToPrint, key = occurCounts.__getitem__):
 			word, Pos = re.split(r"[$]", wordPos)
 			logging.critical("(%s, %s, %s, %s) = [%d, %d, %d]" % (word, Pos, bookName, chapVolId(chap), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap]))
@@ -254,37 +255,39 @@ logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
 
 # 计算出现的词汇，占GRE词汇的覆盖率
-wordsInNovel = {}
-wordsInNovels = set()
+wordPosInNovel = {}
+wordPosInNovels = set()
 for bookName in bookChapWords:
-	wordsInNovel[bookName] = set()
+	wordPosInNovel[bookName] = set()
 	for chap in sorted(bookChapWords[bookName]):
 		for wordPos in bookChapWords[bookName][chap]:
-			if (wordPos not in wordsInterested):
+			if (wordPos not in wordPosInterested):
 				continue
-			wordsInNovel[bookName].add(wordPos)
-			wordsInNovels.add(wordPos)
-		logging.critical("(%s, %s)  %.2f%%" % (bookName, chapVolId(chap), len(wordsInNovel[bookName])/len(wordsInterested)*100))
-	logging.critical("%s %.2f%%" % (bookName, len(wordsInNovels) / len(wordsInterested)*100))
+			wordPosInNovel[bookName].add(wordPos)
+			wordPosInNovels.add(wordPos)
+		logging.critical("(%s, %s)  %.2f%%" % (bookName, chapVolId(chap), len(wordPosInNovel[bookName])/len(wordPosInterested)*100))
+	logging.critical("wordPos %s %.2f%%" % (bookName, len(wordPosInNovels) / len(wordPosInterested)*100))
+	wordsInNovels = set(re.split(r"[$]", wordPos)[0] for wordPos in wordPosInNovels)
+	logging.critical("word %s %.2f%%" % (bookName, len(wordsInNovels) / len(wordsInterested)*100))
 
 
 logging.critical("words intersection relationship: (novel1, novel2) = (wordset1, wordset2, wordset1 | wordset2, wordset1 & wordset2)")
-books = [book for book in wordsInNovel.keys()]
-wordPosSet = [info for info in wordsInNovel.values()]
+books = [book for book in wordPosInNovel.keys()]
+wordPosSet = [info for info in wordPosInNovel.values()]
 for i in range(len(books)):
 	for j in range(i+1, len(books)):
 		book_1 = books[i]
 		book_2 = books[j]
 		logging.critical("(%s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%)" % (book_1, 
 																															book_2,
-																														  len(wordPosSet[i])/len(wordsInterested)*100,
-																														  len(wordPosSet[j])/len(wordsInterested)*100,
-																														  len(wordPosSet[i] | wordPosSet[j])/len(wordsInterested)*100,
-																														  len(wordPosSet[i] & wordPosSet[j])/len(wordsInterested)*100))
+																														  len(wordPosSet[i])/len(wordPosInterested)*100,
+																														  len(wordPosSet[j])/len(wordPosInterested)*100,
+																														  len(wordPosSet[i] | wordPosSet[j])/len(wordPosInterested)*100,
+																														  len(wordPosSet[i] & wordPosSet[j])/len(wordPosInterested)*100))
 																														  
 
 # 哪些词在所有小说中，都没有出现过
-wordsNotOccur = wordsInterested - wordsInNovels
+wordsNotOccur = wordPosInterested - wordPosInNovels
 logging.critical("words that don't show in any novels")
 for wordPos in wordsNotOccur:
 	word, Pos = re.split(r"[$]", wordPos)

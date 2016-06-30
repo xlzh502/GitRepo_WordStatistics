@@ -56,7 +56,7 @@ class DictStemmer(object):
 	Tofel1stLineR=Template(r'''($digitR)$spaceR($wordR)$spaceR($TofelPosDescR)$spaceR([^a-zA-Z]+)''').substitute(locals())
 	Tofel2ndLineR=Template(r'''($digitR)$spaceR($TofelPosDescR)$spaceR([^a-zA-Z]+)''').substitute(locals())
 	
-	LongPos2CocaPos = {'adj':'a', 'vt':'v', 'vi':'v', 'adv':'r', 'n':'n', 'prep':'i','conj':'c'}
+	LongPos2CocaPos = {'a':'j', 'adj':'j', 'vt':'v', 'vi':'v', 'adv':'r', 'n':'n', 'prep':'i','conj':'c', 'v':'v'}
 	
 	def __new__(cls, *args, **dw):
 		DictStemmer.L.acquire_lock()
@@ -156,13 +156,12 @@ class DictStemmer(object):
 		posRe = r"([a-zA-Z]+)"
 		posList = re.findall(posRe, pos)
 		for p in posList:
-			if (len(p) > 1):
-				try:
-					p = self.LongPos2CocaPos[p]
-				except KeyError:
-					logging.warning("Can't map %s to (%s, %s)" % (chinese, curWord, pos))
-					continue
-				assert(len(p) == 1)
+			try:
+				p = self.LongPos2CocaPos[p]
+			except KeyError:
+				logging.warning("Can't map %s to (%s, %s)" % (chinese, curWord, pos))
+				continue
+			assert(len(p) == 1)
 			self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
 			self.wordsInfo[curWord + "$" + p] = self.wordsInfo.get(curWord + "$" + p,"") + comment
 		
