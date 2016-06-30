@@ -30,7 +30,7 @@ class DictStemmer(object):
 	__GRE="gre words.txt"
 	__Tofel="tofel words.txt"
 
-	wordR = r"[a-zA-Z]+"
+	wordR = r"[a-zA-Z\-]+"
 	spaceR = r"\s+"
 	wordListR = Template(r'''$wordR(?:[,] $wordR)*''').substitute(locals())
 	correspR = Template(r'''($wordR)[+]? -> \[($wordListR)\]''').substitute(locals())
@@ -44,6 +44,12 @@ class DictStemmer(object):
 	rQuoteR=r"\)"
 	dashR=r"-"
 	CocaLineR = Template(r'''^$spaceR($digitR)$spaceR$lQuoteR?($wordR(?:$dashR$wordR|$dashR)*)$rQuoteR?$spaceR($posR)$$''').substitute(locals())
+	
+	GrePosR=r"(?:adj|adv|vt|vi|v|n|prep|conj|a)[\.]?"
+	GrePosDescR=Template(r'''$GrePosR(?:[/]$GrePosR)*''').substitute(locals())
+	GreChineseR=r"(?:[^a-zA-Z\.]+)"
+	Gre1stLineR=wordR
+	Gre2ndLineR=Template(r'''($GrePosDescR)($GreChineseR)''').substitute(locals())
 	
 	TofelPosR=r"(?:adj|adv|vt|vi|v|n|prep|conj)\."
 	TofelPosDescR=Template(r'''$TofelPosR(?:[/]$TofelPosR)*''').substitute(locals())
@@ -146,7 +152,7 @@ class DictStemmer(object):
 		f.close()
 				
 	def __doMap(self, pos, chinese, curWord):
-		posRe = r"([a-zA-Z]+)\."
+		posRe = r"([a-zA-Z]+)"
 		posList = re.findall(posRe, pos)
 		for p in posList:
 			if (len(p) > 1):
@@ -160,31 +166,30 @@ class DictStemmer(object):
 		
 	
 	def __analyzeMeaning(self, line, curWord):
-		posRe=r"(?<![a-zA-Z/\.])([a-zA-Z\./]+)(?![a-zA-Z/\.])"
+		posRe = r"[a-zA-Z\./]+"
+		chineseRe = r"(?:[^a-zA-Z\.]+)"
+		itemsR = Template(r'''($posRe)($chineseRe)''').substitute(locals())
+		
 		line = line.strip()
-		meanList = re.split(posRe, line)
-		iterator = iter(meanList)
-		for item in iterator:
-			if (len(item) == 0): # skip spaces or empty string
-				continue
-			if (re.match("[a-zA-Z\./]+", item)):
-				chinese = next(iterator)
-				self.__doMap(item, chinese, curWord)
-		
-		
-		
+		lineItems = re.findall(itemsR, line)
+		for item in lineItems:
+			pos = item[0]
+			chinese = item[1]
+			self.__doMap(pos, chinese, curWord)
+
+	
 	def __readGre(self):
 		f = open(DictStemmer.__GRE, "r",encoding="utf_8")
 		for line in f:
-			matchObj = re.match(DictStemmer.wordR, line)
-			if (matchObj):
-				curWord = matchObj.group(0)
+			match1stLine = re.match(DictStemmer.Gre1stLineR, line)
+			match2ndLine = re.match(DictStemmer.Gre2ndLineR, line)
+			if (match1stLine):
+				curWord = match1stLine.group(0)
 				self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "G"
+			elif (match2ndLine):
+				self.__analyzeMeaning(line, curWord)
 			else:
 				logging.warning("GRE line is not recognizable: %s" % line)
-				#assert(0)
-			line = next(f)
-			self.__analyzeMeaning(line, curWord)
 		f.close()
 
 
