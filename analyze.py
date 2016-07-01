@@ -9,6 +9,7 @@ from DictStemmer import DictStemmer, NoWordInDict, COCAPosInfoNotExist, SkipThis
 #import dpath.util
 from datetime import datetime
 import itertools
+from functools import cmp_to_key
 
 #logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
 logging.basicConfig(format='%(message)s',  filename="c:\\GRE 词频统计\\finalResult.txt", filemode='w', level=logging.CRITICAL)
@@ -205,6 +206,16 @@ def getWordMark(wordPos):
 	if (re.search("T", stemmer.wordsInfo[wordPos])):
 		isTofel = "T"
 	return "[" + isGre + isTofel + "]"
+	
+def sortByFreqAndAlphabet(word1, word2):
+	'''优先按照 词频排序， 在词频相同的情形下，按照字典顺序排序'''
+	# use the expression (a > b) - (a < b) as the equivalent for cmp(a, b)
+	freqOrder = (occurCounts[word1] > occurCounts[word2]) - (occurCounts[word1] < occurCounts[word2])
+	alphaOrder = (word1 > word2) - (word1 < word2)
+	if (freqOrder):
+		return freqOrder
+	else:
+		return alphaOrder
 
 starttime = datetime.now()
 stemmer = DictStemmer()
@@ -273,7 +284,7 @@ for bookName in bookChapWords:
 	for chap in sorted(bookChapWords[bookName]):
 		logging.critical("--------------------------------------\n  %s,  Chapter %s \n--------------------------------------" % (bookName, chapVolId(chap)))
 		wordsToPrint =  set(wordPos for wordPos in bookChapWords[bookName][chap])  & wordPosInterested
-		for wordPos in sorted(wordsToPrint, key = occurCounts.__getitem__):
+		for wordPos in sorted(wordsToPrint, key = cmp_to_key(sortByFreqAndAlphabet)):
 			word, Pos = re.split(r"[$]", wordPos)
 			logging.critical("%-27s%2s%5s [%-3d,%-3d,%-3d]  %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap] ,stemmer.WordsMeaning[wordPos])
 endtime = datetime.now()
@@ -298,7 +309,7 @@ starttime = datetime.now()
 for bookName in bookChapWords:
 	logging.critical("--------------------------------------\n  <<%s>> word summary (word frequency order) \n--------------------------------------" % bookName)
 	wordsToPrint = set(wordPos for chap in bookChapWords[bookName] for wordPos in bookChapWords[bookName][chap]) & wordPosInterested
-	for wordPos in sorted(wordsToPrint, key = occurCounts.__getitem__):
+	for wordPos in sorted(wordsToPrint, key = cmp_to_key(sortByFreqAndAlphabet)):
 		word, Pos = re.split(r"[$]", wordPos)
 		occurChaps = list(chapVolId(chapVol) for chapVol in sorted(wordOccurrence[word][Pos][bookName]))
 		logging.critical("%-27s%2s%5s [%-3d,%-3d]  %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], occurChaps)
