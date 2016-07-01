@@ -6,12 +6,12 @@ import nltk
 from string import Template
 import pdb
 from DictStemmer import DictStemmer, NoWordInDict, COCAPosInfoNotExist, SkipThisWord
-import dpath.util
+#import dpath.util
 from datetime import datetime
 import itertools
 
-logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
-#logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.CRITICAL)
+#logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
+logging.basicConfig(format='%(message)s',  filename="c:\\GRE 词频统计\\finalResult.txt", filemode='w', level=logging.CRITICAL)
 
 def getChapID(strs):
 	refer = {"I" : 1, "II" : 2, "III" : 3, "IV" : 4, "V" : 5, "VI" : 6, "VII" : 7, "VIII" : 8, "IX" : 9, "X" : 10, 
@@ -97,12 +97,12 @@ NovelList = [
 						['Agnes Grey.txt', 'utf_8_sig'],
             ]
 
-'''
+
 NovelList = [
 						['Mansfield Park.txt', 'latin_1'],
 						['Agnes Grey.txt', 'utf_8_sig'],
 						]
-'''
+
 
 def chapVolId(chapId, volId = None, encoding = 0):
 	if (encoding != 0):
@@ -197,6 +197,14 @@ def updateWordOccurence(wordOccurrence, word, Pos, bookName, chap):
 	else:
 		wordOccurrence[word][Pos][bookName][chapId] += 1
 
+def getWordMark(wordPos):
+	isGre = " "
+	isTofel = " "
+	if (re.search("G", stemmer.wordsInfo[wordPos])):
+		isGre = "G"
+	if (re.search("T", stemmer.wordsInfo[wordPos])):
+		isTofel = "T"
+	return "[" + isGre + isTofel + "]"
 
 starttime = datetime.now()
 stemmer = DictStemmer()
@@ -241,15 +249,59 @@ for word in wordOccurrence:
 	for Pos in wordOccurrence[word]:
 		occurCounts[word+"$"+Pos] = sum(enumerateDic(wordOccurrence[word][Pos]))
 
-starttime = datetime.now()
+
 wordPosInterested = set(wordPos for wordPos in stemmer.wordsInfo if re.search("G|T", stemmer.wordsInfo[wordPos]))
 wordsInterested = set(re.split(r"[$]", wordPos)[0] for wordPos in wordPosInterested)
+
+#打印各个书的章节中的词（按照字母顺序）
+logging.critical("-------------- Print words according to alphabet order ------------------------")
+starttime = datetime.now()
 for bookName in bookChapWords:
 	for chap in sorted(bookChapWords[bookName]):
+		logging.critical("--------------------------------------\n  %s,  Chapter %s \n--------------------------------------" % (bookName, chapVolId(chap)))
+		wordsToPrint =  set(wordPos for wordPos in bookChapWords[bookName][chap])  & wordPosInterested
+		for wordPos in sorted(wordsToPrint):
+			word, Pos = re.split(r"[$]", wordPos)
+			logging.critical("%-27s%2s%5s [%-3d,%-3d,%-3d]  %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap] ,stemmer.WordsMeaning[wordPos])
+endtime = datetime.now()
+logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
+
+#打印各个书的章节中的词（按照词频顺序，最少出现词最先打印）
+logging.critical("-------------- Print words according to word frequency order ------------------------")
+starttime = datetime.now()
+for bookName in bookChapWords:
+	for chap in sorted(bookChapWords[bookName]):
+		logging.critical("--------------------------------------\n  %s,  Chapter %s \n--------------------------------------" % (bookName, chapVolId(chap)))
 		wordsToPrint =  set(wordPos for wordPos in bookChapWords[bookName][chap])  & wordPosInterested
 		for wordPos in sorted(wordsToPrint, key = occurCounts.__getitem__):
 			word, Pos = re.split(r"[$]", wordPos)
-			logging.critical("(%s, %s, %s, %s) = [%d, %d, %d]" % (word, Pos, bookName, chapVolId(chap), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap]))
+			logging.critical("%-27s%2s%5s [%-3d,%-3d,%-3d]  %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap] ,stemmer.WordsMeaning[wordPos])
+endtime = datetime.now()
+logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
+
+#打印各个书的单词（按照字母顺序）
+logging.critical("-------------- Book word summary, print words according to alphabet order ------------------------")
+starttime = datetime.now()
+for bookName in bookChapWords:
+	logging.critical("--------------------------------------\n  <<%s>> word summary (alphabet order) \n--------------------------------------" % bookName)
+	wordsToPrint = set(wordPos for chap in bookChapWords[bookName] for wordPos in bookChapWords[bookName][chap]) & wordPosInterested
+	for wordPos in sorted(wordsToPrint):
+		word, Pos = re.split(r"[$]", wordPos)
+		occurChaps = list(chapVolId(chapVol) for chapVol in sorted(wordOccurrence[word][Pos][bookName]))
+		logging.critical("%-27s%2s%5s [%-3d,%-3d] %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], occurChaps)
+endtime = datetime.now()
+logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
+
+#打印各个书的单词（按照词频顺序，最少出现词最先打印）
+logging.critical("-------------- Book word summary, print words according to word frequency order ------------------------")
+starttime = datetime.now()
+for bookName in bookChapWords:
+	logging.critical("--------------------------------------\n  <<%s>> word summary (word frequency order) \n--------------------------------------" % bookName)
+	wordsToPrint = set(wordPos for chap in bookChapWords[bookName] for wordPos in bookChapWords[bookName][chap]) & wordPosInterested
+	for wordPos in sorted(wordsToPrint, key = occurCounts.__getitem__):
+		word, Pos = re.split(r"[$]", wordPos)
+		occurChaps = list(chapVolId(chapVol) for chapVol in sorted(wordOccurrence[word][Pos][bookName]))
+		logging.critical("%-27s%2s%5s [%-3d,%-3d]  %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], occurChaps)
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
@@ -264,7 +316,7 @@ for bookName in bookChapWords:
 			if (wordPos not in wordPosInterested):
 				continue
 			wordPosInNovel[bookName].add(wordPos)
-			wordPosInNovels.add(wordPos)
+			wordPosInNovels.add(wordPos)		
 		logging.critical("(%s, %s)  %.2f%%" % (bookName, chapVolId(chap), len(wordPosInNovel[bookName])/len(wordPosInterested)*100))
 	logging.critical("wordPos %s %.2f%%" % (bookName, len(wordPosInNovels) / len(wordPosInterested)*100))
 	wordsInNovels = set(re.split(r"[$]", wordPos)[0] for wordPos in wordPosInNovels)
@@ -289,7 +341,7 @@ for i in range(len(books)):
 # 哪些词在所有小说中，都没有出现过
 wordsNotOccur = wordPosInterested - wordPosInNovels
 logging.critical("words that don't show in any novels")
-for wordPos in wordsNotOccur:
+for wordPos in sorted(wordsNotOccur):
 	word, Pos = re.split(r"[$]", wordPos)
 	logging.critical("%-30s%s" % (word, Pos))
 
