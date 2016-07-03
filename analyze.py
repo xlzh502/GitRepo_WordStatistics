@@ -98,12 +98,12 @@ NovelList = [
 						['Agnes Grey.txt', 'utf_8_sig'],
             ]
 
-
+'''
 NovelList = [
 						['Mansfield Park.txt', 'latin_1'],
 						['Agnes Grey.txt', 'utf_8_sig'],
 						]
-
+'''
 
 def chapVolId(chapId, volId = None, encoding = 0):
 	if (encoding != 0):
@@ -216,6 +216,40 @@ def sortByFreqAndAlphabet(word1, word2):
 		return freqOrder
 	else:
 		return alphaOrder
+		
+def genCompactChaps(chapVolIds):
+	'''给定一个章节的列表， 返回压缩后的章节列表，譬如:
+	 3,5,6,8,9,10,11,13
+	 返回:
+	 3,5,6,8-11,13
+	'''
+	result = []
+	if (len(chapVolIds) == 1):
+		return [chapVolId(chapVolIds[0])]
+	# 计算各个章与前一章的 差值
+	deltaList = [ chapVolIds[i] - chapVolIds[i-1] for i in range(1, len(chapVolIds)) ]
+	deltaList.insert(0,0)
+	i = 0
+	while (i < len(deltaList)):
+		while (i < len(deltaList)-1 and deltaList[i+1] != 1):
+			result.append(chapVolId(chapVolIds[i]))
+			i+=1
+		if (i == len(deltaList) - 1):
+			result.append(chapVolId(chapVolIds[i]))
+			break
+		else:
+			j = i + 1
+		while (j < len(deltaList)-1 and deltaList[j+1] == 1):
+			j+=1
+		if (j - i > 1):
+			result.append("%s-%s" % (chapVolId(chapVolIds[i]), chapVolId(chapVolIds[j])))
+		else:
+			result.append(chapVolId(chapVolIds[i]))
+			result.append(chapVolId(chapVolIds[j]))
+		i=j+1
+	return result
+			
+		
 
 starttime = datetime.now()
 stemmer = DictStemmer()
@@ -271,9 +305,12 @@ for bookName in bookChapWords:
 	for chap in sorted(bookChapWords[bookName]):
 		logging.critical("--------------------------------------\n  %s,  Chapter %s \n--------------------------------------" % (bookName, chapVolId(chap)))
 		wordsToPrint =  set(wordPos for wordPos in bookChapWords[bookName][chap])  & wordPosInterested
+		if (len(wordsToPrint) == 0):
+			continue
+		maxWordLen = max(len(re.split(r"[$]", wordPos)[0]) for wordPos in wordsToPrint)
 		for wordPos in sorted(wordsToPrint):
 			word, Pos = re.split(r"[$]", wordPos)
-			logging.critical("%-27s%2s%5s [%-3d,%-3d,%-3d]  %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap] ,stemmer.WordsMeaning[wordPos])
+			logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-3d,%-3d,%-3d]  %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap] ,stemmer.WordsMeaning[wordPos])
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
@@ -284,9 +321,12 @@ for bookName in bookChapWords:
 	for chap in sorted(bookChapWords[bookName]):
 		logging.critical("--------------------------------------\n  %s,  Chapter %s \n--------------------------------------" % (bookName, chapVolId(chap)))
 		wordsToPrint =  set(wordPos for wordPos in bookChapWords[bookName][chap])  & wordPosInterested
+		if (len(wordsToPrint) == 0):
+			continue
+		maxWordLen = max(len(re.split(r"[$]", wordPos)[0]) for wordPos in wordsToPrint)
 		for wordPos in sorted(wordsToPrint, key = cmp_to_key(sortByFreqAndAlphabet)):
 			word, Pos = re.split(r"[$]", wordPos)
-			logging.critical("%-27s%2s%5s [%-3d,%-3d,%-3d]  %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap] ,stemmer.WordsMeaning[wordPos])
+			logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-3d,%-3d,%-3d]  %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), wordOccurrence[word][Pos][bookName][chap] ,stemmer.WordsMeaning[wordPos])
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
@@ -294,12 +334,16 @@ logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 logging.critical("-------------- Book word summary, print words according to alphabet order ------------------------")
 starttime = datetime.now()
 for bookName in bookChapWords:
-	logging.critical("--------------------------------------\n  <<%s>> word summary (alphabet order) \n--------------------------------------" % bookName)
+	logging.critical("--------------------------------------\n  <%s> word summary (alphabet order) \n--------------------------------------" % bookName)
 	wordsToPrint = set(wordPos for chap in bookChapWords[bookName] for wordPos in bookChapWords[bookName][chap]) & wordPosInterested
+	if (len(wordsToPrint) == 0):
+		continue
+	maxWordLen = max(len(re.split(r"[$]", wordPos)[0]) for wordPos in wordsToPrint)
 	for wordPos in sorted(wordsToPrint):
 		word, Pos = re.split(r"[$]", wordPos)
-		occurChaps = list(chapVolId(chapVol) for chapVol in sorted(wordOccurrence[word][Pos][bookName]))
-		logging.critical("%-27s%2s%5s [%-3d,%-3d] %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], occurChaps)
+		#occurChaps = list(chapVolId(chapVol) for chapVol in sorted(wordOccurrence[word][Pos][bookName]))
+		occurChaps = genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))
+		logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-2d,%-2d] %s [%s]", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], ','.join(occurChaps))
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
@@ -307,12 +351,15 @@ logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 logging.critical("-------------- Book word summary, print words according to word frequency order ------------------------")
 starttime = datetime.now()
 for bookName in bookChapWords:
-	logging.critical("--------------------------------------\n  <<%s>> word summary (word frequency order) \n--------------------------------------" % bookName)
+	logging.critical("--------------------------------------\n  <%s> word summary (word frequency order) \n--------------------------------------" % bookName)
 	wordsToPrint = set(wordPos for chap in bookChapWords[bookName] for wordPos in bookChapWords[bookName][chap]) & wordPosInterested
+	if (len(wordsToPrint) == 0):
+		continue
+	maxWordLen = max(len(re.split(r"[$]", wordPos)[0]) for wordPos in wordsToPrint)
 	for wordPos in sorted(wordsToPrint, key = cmp_to_key(sortByFreqAndAlphabet)):
 		word, Pos = re.split(r"[$]", wordPos)
-		occurChaps = list(chapVolId(chapVol) for chapVol in sorted(wordOccurrence[word][Pos][bookName]))
-		logging.critical("%-27s%2s%5s [%-3d,%-3d]  %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], occurChaps)
+		occurChaps = genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))
+		logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-2d,%-2d]  %s [%s]", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], ','.join(occurChaps))
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 

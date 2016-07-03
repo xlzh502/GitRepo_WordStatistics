@@ -143,7 +143,6 @@ class DictStemmer(object):
 				curWord = matchObj.group(2)
 				freq = matchObj.group(1)
 				pos = matchObj.group(3)
-				#self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "C"
 				self.wordsInfo[curWord + "$" + pos] = self.wordsInfo.get(curWord + "$" + pos,"") + "C"
 				self.cocaWordsInfo[curWord] = self.cocaWordsInfo.get(curWord,"") + pos
 				self.cocaWordsFreq[curWord + "$" + pos] = freq
@@ -162,7 +161,8 @@ class DictStemmer(object):
 				logging.warning("Can't map %s to (%s, %s)" % (chinese, curWord, pos))
 				continue
 			assert(len(p) == 1)
-			self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
+			if (len(self.WordsMeaning.get(curWord + "$" + p, "")) < len(chinese)): # 取较长的那个译文
+				self.WordsMeaning[curWord + "$" + p] = chinese
 			self.wordsInfo[curWord + "$" + p] = self.wordsInfo.get(curWord + "$" + p,"") + comment
 		
 	
@@ -186,7 +186,6 @@ class DictStemmer(object):
 			match2ndLine = re.match(DictStemmer.Gre2ndLineR, line)
 			if (match1stLine):
 				curWord = match1stLine.group(0)
-				#self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "G"
 			elif (match2ndLine):
 				self.__analyzeMeaning(line, curWord, "G")
 			else:
@@ -204,20 +203,15 @@ class DictStemmer(object):
 				curLineNum = match1st.group(1)
 				posDesc = match1st.group(3)
 				chinese = match1st.group(4)
-				#self.wordsInfo[curWord] = self.wordsInfo.get(curWord,"") + "T"
 				self.__analyzeMeaning(posDesc + chinese, curWord,  "T")
 			elif (match2nd):
-				#if (curLineNum != match2nd.group(1)):
-				#	print(line + "------")
 				assert(curLineNum == match2nd.group(1))
 				posDesc = match2nd.group(2)
 				chinese = match2nd.group(3)
-				#self.__analyzeMeaning(posDesc + chinese, curWord)
 				self.__analyzeMeaning(posDesc + chinese, curWord, "T")
 			else:
 				logging.warning("TOFEL line is not recognizable: %s" % line)
 				continue
-				#assert(0)
 
 	def doStemming(self, wordAndPos):
 		'''
