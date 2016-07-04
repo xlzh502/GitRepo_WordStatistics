@@ -248,8 +248,19 @@ def genCompactChaps(chapVolIds):
 			result.append(chapVolId(chapVolIds[j]))
 		i=j+1
 	return result
-			
-		
+
+def genCompressWord(word):
+	'''It is sometimes noted that English text is highly redundant, and it is still easy to read when word-internal vowels are left out. 
+	For example, declaration becomes dclrtn, and inalienable becomes inlnble, retaining any initial or final vowel sequences. 
+	The regular expression in our next example matches initial vowel sequences, final vowel sequences, and all consonants; everything else is ignored. 
+	This three-way disjunction is processed left-to-right, if one of the three parts matches the word, any later parts of the regular expression are ignored.'''
+	regexp = r'^[AEIOUaeiou]+|[AEIOUaeiou]+$|[^AEIOUaeiou]'
+	pieces = re.findall(regexp, word)
+	return ''.join(pieces)
+
+def cmprssBookName(bookName):
+	return  "".join(genCompressWord(word).capitalize() for word in re.split(" ", bookName))
+
 
 starttime = datetime.now()
 stemmer = DictStemmer()
@@ -360,6 +371,31 @@ for bookName in bookChapWords:
 		word, Pos = re.split(r"[$]", wordPos)
 		occurChaps = genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))
 		logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-2d,%-2d]  %s [%s]", word, Pos, getWordMark(wordPos), occurCounts[wordPos], sum(enumerateDic(wordOccurrence[word][Pos][bookName])), stemmer.WordsMeaning[wordPos], ','.join(occurChaps))
+endtime = datetime.now()
+logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
+
+#按照单词，打印各个单词出现在各本书的名称
+logging.critical("-------------- Word Summary, print words according to alphabet order ------------------------")
+starttime = datetime.now()
+wordsToPrint = set(word+"$"+Pos for word in wordOccurrence for Pos in wordOccurrence[word]) & wordPosInterested
+maxWordLen = max(len(re.split(r"[$]", wordPos)[0]) for wordPos in wordsToPrint)
+for wordPos in sorted(wordsToPrint):
+	word, Pos = re.split(r"[$]", wordPos)
+	bookOccurInfo = ""
+	for bookName in wordOccurrence[word][Pos]:
+		bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), ','.join(genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))))
+	logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-2d] %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], stemmer.WordsMeaning[wordPos], bookOccurInfo)
+endtime = datetime.now()
+logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
+
+logging.critical("-------------- Word Summary, print words according to frequency order ------------------------")
+starttime = datetime.now()
+for wordPos in sorted(wordsToPrint, key = cmp_to_key(sortByFreqAndAlphabet)):
+	word, Pos = re.split(r"[$]", wordPos)
+	bookOccurInfo = ""
+	for bookName in wordOccurrence[word][Pos]:
+		bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), ','.join(genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))))
+	logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-2d] %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], stemmer.WordsMeaning[wordPos], bookOccurInfo)
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
 
