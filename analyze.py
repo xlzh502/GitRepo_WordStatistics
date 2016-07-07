@@ -66,14 +66,14 @@ pdb.set_trace()
 
 NovelList = [
 						['Gone with the wind.txt', 'gbk'],
-						['pride and prejudice.txt', 'gbk'],
-						['david copperfield.txt', 'utf_8_sig'],
-						['Emma.txt', 'gbk'],
-						['hard times.txt', 'utf_8_sig'], 
-						['Jane Eyre.txt', 'gbk'],
-						['lord jim.txt', 'gbk'],
-						['Mansfield Park.txt', 'latin_1'],
-						['martin chuzzlewit.txt', 'latin_1'],
+						['pride and prejudice.txt', 'gbk'], #有录音
+						['david copperfield.txt', 'utf_8_sig'],#有录音
+						['Emma.txt', 'gbk'],#有录音
+						['hard times.txt', 'utf_8_sig'], #有录音
+						['Jane Eyre.txt', 'gbk'], #有录音
+						['lord jim.txt', 'gbk'],#有录音
+						['Mansfield Park.txt', 'latin_1'],#有录音
+						['martin chuzzlewit.txt', 'latin_1'],#有录音
 						['Northanger Abbey.txt', 'gbk'],
 						['oliver twist.txt', 'gbk'],
 						['Persuasion.txt', 'gbk'],
@@ -96,15 +96,79 @@ NovelList = [
 						['The Life of the Bee.txt', 'utf_8_sig'],	
 						['A tale of two cities.txt', 'latin_1'],
 						['Agnes Grey.txt', 'utf_8_sig'],
+						['The call of the wild.txt', 'latin_1'],
+						['White fang.txt', 'latin_1'],
+						['The sea wolf.txt', 'latin_1'],
+						['An inquiry into the nature and causes of the wealth of nations.txt',  'latin_1'],
+						["A collection of engliash language children's liiterature.txt", 'latin_1'],
             ]
 
 '''
 NovelList = [
-						['Mansfield Park.txt', 'latin_1'],
+#几部最长的小说
+						['Gone with the wind.txt', 'gbk'],
+						['Tess of the Urbervilles.txt','gbk'],
+						['The count of monte Cristo.txt','gbk'],
+						['martin chuzzlewit.txt', 'latin_1'],
+						['david copperfield.txt', 'utf_8_sig'],
+						['sons and lovers.txt','gbk'],
+						]
+
+NovelList = [
+						['The old man and the sea.txt', 'utf_8_sig'],
+						['Lost Horizon.txt', 'latin_1'],
+						['The Life of the Bee.txt', 'utf_8_sig'],
+						['The sun also rises.txt', 'gbk'],
+						['Treasure Island.txt', 'gbk'],
 						['Agnes Grey.txt', 'utf_8_sig'],
+						['the adventure of tom sawyer.txt', 'utf_8_sig'],
+						['Northanger Abbey.txt', 'gbk'],
+						['Persuasion.txt', 'gbk'],
+						['the Adventures of Huckleberry Finn.txt', 'utf_8_sig'],
+						['hard times.txt', 'utf_8_sig'],
+						['Wuthering Heights.txt', 'gbk'],
+						['the mayor of casterbridge.txt', 'gbk'],
+						['sense and sensibility.txt', 'gbk'],
+						['pride and prejudice.txt', 'gbk'],
+						['lord jim.txt', 'gbk'],
+						]
+NovelList = [
+#这个列表，按照 小说的长度从小到大排列
+						['The old man and the sea.txt', 'utf_8_sig'],
+						['Lost Horizon.txt', 'latin_1'],
+						['The Life of the Bee.txt', 'utf_8_sig'],
+						['The sun also rises.txt', 'gbk'],
+						['Treasure Island.txt', 'gbk'],
+						['Agnes Grey.txt', 'utf_8_sig'],
+						['the adventure of tom sawyer.txt', 'utf_8_sig'],
+						['Northanger Abbey.txt', 'gbk'],
+						['Persuasion.txt', 'gbk'],
+						['the Adventures of Huckleberry Finn.txt', 'utf_8_sig'],
+						['hard times.txt', 'utf_8_sig'],
+						['Wuthering Heights.txt', 'gbk'],
+						['the mayor of casterbridge.txt', 'gbk'],
+						['sense and sensibility.txt', 'gbk'],
+						['pride and prejudice.txt', 'gbk'],
+						['lord jim.txt', 'gbk'],
+						['Gone with the wind.txt', 'gbk'],
+						['Tess of the Urbervilles.txt','gbk'],
+						['The count of monte Cristo.txt','gbk'],
+						['martin chuzzlewit.txt', 'latin_1'],
+						['david copperfield.txt', 'utf_8_sig'],
+						['sons and lovers.txt','gbk'],
 						]
 '''
 
+NovelList = [
+						['Gone with the wind.txt', 'gbk'],
+						['david copperfield.txt', 'utf_8_sig'],
+						['Jane Eyre.txt', 'gbk'], 
+						['The call of the wild.txt', 'latin_1'],
+						['White fang.txt', 'latin_1'],
+						['The sea wolf.txt', 'latin_1'],
+						['An inquiry into the nature and causes of the wealth of nations.txt',  'latin_1'],
+						]
+						
 def chapVolId(chapId, volId = None, encoding = 0):
 	if (encoding != 0):
 		if (volId != None):
@@ -207,12 +271,17 @@ def getWordMark(wordPos):
 		isTofel = "T"
 	return "[" + isGre + isTofel + "]"
 	
-def sortByFreqAndAlphabet(word1, word2):
-	'''优先按照 词频排序， 在词频相同的情形下，按照字典顺序排序'''
+def sortByFreqAndAlphabet(wordPos1, wordPos2):
+	'''先按照词性归类， 对于相同词性的单词，按照 词频排序， 在词频相同的情形下，按照字典顺序排序'''
 	# use the expression (a > b) - (a < b) as the equivalent for cmp(a, b)
-	freqOrder = (occurCounts[word1] > occurCounts[word2]) - (occurCounts[word1] < occurCounts[word2])
-	alphaOrder = (word1 > word2) - (word1 < word2)
-	if (freqOrder):
+	freqOrder = (occurCounts[wordPos1] > occurCounts[wordPos2]) - (occurCounts[wordPos1] < occurCounts[wordPos2])
+	alphaOrder = (wordPos1 > wordPos2) - (wordPos1 < wordPos2)
+	pos1 = re.split(r"[$]", wordPos1)[1]
+	pos2 = re.split(r"[$]", wordPos2)[1]
+	posOrder = (pos1 > pos2) - (pos1 < pos2)
+	if (posOrder):
+		return posOrder
+	elif (freqOrder):
 		return freqOrder
 	else:
 		return alphaOrder
@@ -383,7 +452,8 @@ for wordPos in sorted(wordsToPrint):
 	word, Pos = re.split(r"[$]", wordPos)
 	bookOccurInfo = ""
 	for bookName in wordOccurrence[word][Pos]:
-		bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), ','.join(genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))))
+		#bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), ','.join(genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))))
+		bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), sum(enumerateDic(wordOccurrence[word][Pos][bookName])))
 	logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-2d] %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], stemmer.WordsMeaning[wordPos], bookOccurInfo)
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
@@ -394,7 +464,8 @@ for wordPos in sorted(wordsToPrint, key = cmp_to_key(sortByFreqAndAlphabet)):
 	word, Pos = re.split(r"[$]", wordPos)
 	bookOccurInfo = ""
 	for bookName in wordOccurrence[word][Pos]:
-		bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), ','.join(genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))))
+		#bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), ','.join(genCompactChaps(sorted(wordOccurrence[word][Pos][bookName]))))
+		bookOccurInfo += "%s[%s] " % (cmprssBookName(bookName), sum(enumerateDic(wordOccurrence[word][Pos][bookName])))
 	logging.critical("%-" + str(maxWordLen+3) + "s%2s%5s [%-2d] %s %s", word, Pos, getWordMark(wordPos), occurCounts[wordPos], stemmer.WordsMeaning[wordPos], bookOccurInfo)
 endtime = datetime.now()
 logging.info("Printing word result: %d s" % (endtime - starttime).seconds)
