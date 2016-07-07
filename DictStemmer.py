@@ -442,6 +442,7 @@ WRB: Wh-adverb
 			['j', r'.+ful\b', r'n', r'ful\b'],
 			['n', r'.+fulness\b', r'n|v|j', r'fulness\b'],
 			['n', r'.+ness\b', r'j', r'ness\b'],
+			['n', r'.+ment\b', r'v', r'ment\b'] # eg: infringement -> infringe
 		]
 		
 		(word, Pos) = wordAndPos
@@ -460,20 +461,20 @@ WRB: Wh-adverb
 			for trans in complexStem:
 				if (Pos == trans[0]  and  # 词性
 					 re.match(trans[1], word) and  # 匹配正则表达式
-					 re.sub(trans[3], "", word) in self.cocaDict and  # 将词缀抹去，该词在字典中
-					 re.match(trans[2], self.cocaWordsInfo.get(re.sub(trans[3], "", word), ""))
+					 (re.sub(trans[3], "", word) in self.cocaDict or re.sub(trans[3], "", word) in self.cocaMainWord) and  # 将词缀抹去，该词在字典中
+					 (re.match(trans[2], self.cocaWordsInfo.get(re.sub(trans[3], "", word), "")) or re.sub(trans[3], "", word)+"$"+trans[2] in self.wordsInfo)
 					 ):
 					 	(oldword, word) = (word, re.sub(trans[3], "", word))
-					 	(oldPos, Pos) = (Pos, self.cocaWordsInfo.get(word, "")[0])
+					 	(oldPos, Pos) = (Pos, trans[2])
 					 	logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
 				elif (Pos == trans[0]  and  # 词性
 				   re.match(trans[1], word) and  # 匹配正则表达式
 				   word in self.cocaDict and  # 存在词转换映射
-				   re.match(trans[2], self.cocaWordsInfo.get(self.cocaDict[word], "")) and # 转换词满足词性
+				   (re.match(trans[2], self.cocaWordsInfo.get(self.cocaDict[word], "")) or self.cocaDict[word]+"$"+trans[2] in self.wordsInfo) and # 转换词满足词性
 				   not re.match(trans[1], self.cocaDict[word]) # 词缀 在 转换词中已经被去掉了 
 				   ):
 					(oldword, word) = (word, self.cocaDict[word])
-					(oldPos, Pos) = (Pos, self.cocaWordsInfo.get(word, "")[0])
+					(oldPos, Pos) = (Pos, trans[2])
 					logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
 				else:
 					continue
