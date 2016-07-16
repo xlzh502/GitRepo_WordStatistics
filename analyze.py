@@ -83,7 +83,7 @@ NovelList = [
 						['Tess of the Urbervilles.txt','gbk'],
 						['the adventure of tom sawyer.txt','utf_8_sig'],
 						['The count of monte Cristo.txt','gbk'],
-						['The genius.txt','gbk'],
+						#['The genius.txt','gbk'],
 						['the mayor of casterbridge.txt','gbk'],
 						['the moonstone.txt','gbk'],
 						['the return of the native.txt','utf_8_sig'],
@@ -100,7 +100,7 @@ NovelList = [
 						['White fang.txt', 'latin_1'],
 						['The sea wolf.txt', 'latin_1'],
 						['An inquiry into the nature and causes of the wealth of nations.txt',  'latin_1'],
-						["A collection of engliash language children's liiterature.txt", 'latin_1'],
+						["A collection of english language children's literature.txt", 'latin_1'],
             ]
 
 '''
@@ -132,43 +132,51 @@ NovelList = [
 						['pride and prejudice.txt', 'gbk'],
 						['lord jim.txt', 'gbk'],
 						]
+						
+
+
 NovelList = [
 #这个列表，按照 小说的长度从小到大排列
 						['The old man and the sea.txt', 'utf_8_sig'],
+						['The call of the wild.txt', 'latin_1'],
 						['Lost Horizon.txt', 'latin_1'],
 						['The Life of the Bee.txt', 'utf_8_sig'],
 						['The sun also rises.txt', 'gbk'],
 						['Treasure Island.txt', 'gbk'],
 						['Agnes Grey.txt', 'utf_8_sig'],
 						['the adventure of tom sawyer.txt', 'utf_8_sig'],
+						['White fang.txt', 'latin_1'],
 						['Northanger Abbey.txt', 'gbk'],
 						['Persuasion.txt', 'gbk'],
 						['the Adventures of Huckleberry Finn.txt', 'utf_8_sig'],
 						['hard times.txt', 'utf_8_sig'],
+						['The sea wolf.txt', 'latin_1'],
 						['Wuthering Heights.txt', 'gbk'],
 						['the mayor of casterbridge.txt', 'gbk'],
 						['sense and sensibility.txt', 'gbk'],
 						['pride and prejudice.txt', 'gbk'],
 						['lord jim.txt', 'gbk'],
-						['Gone with the wind.txt', 'gbk'],
-						['Tess of the Urbervilles.txt','gbk'],
-						['The count of monte Cristo.txt','gbk'],
+						['A tale of two cities.txt', 'latin_1'],
+						['the return of the native.txt', 'utf_8_sig'],
+						['Tess of the Urbervilles.txt', 'gbk'],
+						['Sister Carrie.txt', 'gbk'],
+						['sons and lovers.txt', 'gbk'],
+						['Emma.txt', 'gbk'],
+						['Mansfield Park.txt', 'latin_1'],
+						['oliver twist.txt', 'gbk'],
+						['Jane Eyre.txt', 'gbk'],
+						['the moonstone.txt', 'gbk'],
+						["A collection of english language children's literature.txt", 'latin_1'],
 						['martin chuzzlewit.txt', 'latin_1'],
 						['david copperfield.txt', 'utf_8_sig'],
-						['sons and lovers.txt','gbk'],
+						['An inquiry into the nature and causes of the wealth of nations.txt', 'latin_1'],
+						['Gone with the wind.txt', 'gbk'],
+						['The count of monte Cristo.txt', 'gbk'],
 						]
 '''
 
-NovelList = [
-						['Gone with the wind.txt', 'gbk'],
-						['david copperfield.txt', 'utf_8_sig'],
-						['Jane Eyre.txt', 'gbk'], 
-						['The call of the wild.txt', 'latin_1'],
-						['White fang.txt', 'latin_1'],
-						['The sea wolf.txt', 'latin_1'],
-						['An inquiry into the nature and causes of the wealth of nations.txt',  'latin_1'],
-						]
-						
+
+					
 def chapVolId(chapId, volId = None, encoding = 0):
 	if (encoding != 0):
 		if (volId != None):
@@ -330,7 +338,6 @@ def genCompressWord(word):
 def cmprssBookName(bookName):
 	return  "".join(genCompressWord(word).capitalize() for word in re.split(" ", bookName))
 
-
 starttime = datetime.now()
 stemmer = DictStemmer()
 endtime = datetime.now()
@@ -488,25 +495,75 @@ for bookName in bookChapWords:
 	logging.critical("word %s %.2f%%" % (bookName, len(wordsInNovels) / len(wordsInterested)*100))
 
 
-logging.critical("words intersection relationship: (novel1, novel2) = (wordset1, wordset2, wordset1 | wordset2, wordset1 & wordset2)")
 books = [book for book in wordPosInNovel.keys()]
-wordPosSet = [info for info in wordPosInNovel.values()]
-for i in range(len(books)):
-	for j in range(i+1, len(books)):
-		book_1 = books[i]
-		book_2 = books[j]
-		logging.critical("(%s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%)" % (book_1, 
-																															book_2,
-																														  len(wordPosSet[i])/len(wordPosInterested)*100,
-																														  len(wordPosSet[j])/len(wordPosInterested)*100,
-																														  len(wordPosSet[i] | wordPosSet[j])/len(wordPosInterested)*100,
-																														  len(wordPosSet[i] & wordPosSet[j])/len(wordPosInterested)*100))
-																														  
+
+logging.critical("words intersection relationship: (book1, book2) = (wordset1, wordset2, wordset1 & wordset2, wordset1 | wordset2)")
+result = []
+for (book1, book2) in itertools.combinations(books, 2):
+	result.append((book1, book2, len(wordPosInNovel[book1])/len(wordPosInterested)*100, 
+	                         len(wordPosInNovel[book2])/len(wordPosInterested)*100, 
+	                         len(wordPosInNovel[book1] & wordPosInNovel[book2])/len(wordPosInterested)*100,
+	                         len(wordPosInNovel[book1] | wordPosInNovel[book2])/len(wordPosInterested)*100))
+for item in sorted(result,  key = lambda x: x[len(x) - 1], reverse=True):
+	logging.critical("(%s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%)" % item)
+
+result.clear()
+logging.critical("words intersection relationship: (book1, book2, book3) = (wordset1, wordset2, wordset3, wordset1 | wordset2 | wordset3)")
+for (book1, book2, book3) in itertools.combinations(books, 3):
+	result.append((book1, book2, book3, len(wordPosInNovel[book1])/len(wordPosInterested)*100, 
+	                                    len(wordPosInNovel[book2])/len(wordPosInterested)*100,
+	                                    len(wordPosInNovel[book3])/len(wordPosInterested)*100, 
+	                                    len(wordPosInNovel[book1] | wordPosInNovel[book2] | wordPosInNovel[book3])/len(wordPosInterested)*100))
+for item in sorted(result,  key = lambda x: x[len(x) - 1], reverse=True):
+	logging.critical("(%s, %s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%)" % item)
+	                                                       
+result.clear()
+logging.critical("words intersection relationship: (book1, book2, book3, book4) = (wordset1, wordset2, wordset3, wordset4, wordset1 | wordset2 | wordset3 | wordset4)")
+for (book1, book2, book3, book4) in itertools.combinations(books, 4):
+	result.append((book1, book2, book3, book4,
+                                    len(wordPosInNovel[book1])/len(wordPosInterested)*100, 
+                                    len(wordPosInNovel[book2])/len(wordPosInterested)*100,
+                                    len(wordPosInNovel[book3])/len(wordPosInterested)*100, 
+                                    len(wordPosInNovel[book4])/len(wordPosInterested)*100, 
+	                                  len(wordPosInNovel[book1] | wordPosInNovel[book2] | wordPosInNovel[book3] | wordPosInNovel[book4])/len(wordPosInterested)*100))
+for item in sorted(result,  key = lambda x: x[len(x) - 1], reverse=True):
+	logging.critical("(%s, %s, %s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%, %.2f%%)" % item )
+	
+	
+result.clear()
+logging.critical("words intersection relationship: (book1, book2, book3, book4, book5) = (wordset1, wordset2, wordset3, wordset4, wordset5, wordset1 | wordset2 | wordset3 | wordset4 |wordset5)")
+for (book1, book2, book3, book4, book5) in itertools.combinations(books, 5):
+	result.append((book1, book2, book3, book4, book5, len(wordPosInNovel[book1])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book2])/len(wordPosInterested)*100,
+	                   len(wordPosInNovel[book3])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book4])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book5])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book1] | wordPosInNovel[book2] | wordPosInNovel[book3] | wordPosInNovel[book4] | wordPosInNovel[book5])/len(wordPosInterested)*100))
+for item in sorted(result,  key = lambda x: x[len(x) - 1], reverse=True):
+	logging.critical("(%s, %s, %s, %s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%, %.2f%%, %.2f%%)" % item)
+
+'''
+result.clear()
+logging.critical("words intersection relationship: (book1, book2, book3, book4, book5, book6) = (wordset1, wordset2, wordset3, wordset4, wordset5, wordset6, wordset1 | wordset2 | wordset3 | wordset4 |wordset5 | wordset6)")
+totalCnt = len(list(itertools.combinations(books, 6)))
+for n, (book1, book2, book3, book4, book5, book6) in enumerate(itertools.combinations(books, 6)):
+	print("handling tuple %d of %d" % (n, totalCnt))
+	result.append((book1, book2, book3, book4, book5, book6, len(wordPosInNovel[book1])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book2])/len(wordPosInterested)*100,
+	                   len(wordPosInNovel[book3])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book4])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book5])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book6])/len(wordPosInterested)*100, 
+	                   len(wordPosInNovel[book1] | wordPosInNovel[book2] | wordPosInNovel[book3] | wordPosInNovel[book4] | wordPosInNovel[book5] | wordPosInNovel[book6])/len(wordPosInterested)*100))
+for item in sorted(result,  key = lambda x: x[len(x) - 1], reverse=True):
+	logging.critical("(%s, %s, %s, %s, %s, %s) = (%.2f%%, %.2f%%, %.2f%%, %.2f%%, %.2f%%, %.2f%%, %.2f%%)" % item)
+'''
+
 
 # 哪些词在所有小说中，都没有出现过
 wordsNotOccur = wordPosInterested - wordPosInNovels
 logging.critical("words that don't show in any novels")
 for wordPos in sorted(wordsNotOccur):
 	word, Pos = re.split(r"[$]", wordPos)
-	logging.critical("%-30s%s" % (word, Pos))
+	logging.critical("%-17s%2s%5s %s", word, Pos, getWordMark(wordPos), stemmer.WordsMeaning[wordPos])
 

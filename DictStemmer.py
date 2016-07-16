@@ -161,9 +161,12 @@ class DictStemmer(object):
 				logging.warning("Can't map %s to (%s, %s)" % (chinese, curWord, pos))
 				continue
 			assert(len(p) == 1)
-			if (len(self.WordsMeaning.get(curWord + "$" + p, "")) < len(chinese)): # 取较长的那个译文
-				self.WordsMeaning[curWord + "$" + p] = chinese
+			#if (len(self.WordsMeaning.get(curWord + "$" + p, "")) < len(chinese)): # 取较长的那个译文
+			#	self.WordsMeaning[curWord + "$" + p] = chinese
+			self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
 			self.wordsInfo[curWord + "$" + p] = self.wordsInfo.get(curWord + "$" + p,"") + comment
+			if (not re.search(p, self.wordsInfo.get(curWord, ""))):
+				self.wordsInfo[curWord] = self.wordsInfo.get(curWord, "") + p
 		
 	
 	def __analyzeMeaning(self, line, curWord, comment):
@@ -212,6 +215,7 @@ class DictStemmer(object):
 			else:
 				logging.warning("TOFEL line is not recognizable: %s" % line)
 				continue
+	
 
 	def doStemming(self, wordAndPos):
 		'''
@@ -369,8 +373,8 @@ WRB: Wh-adverb
 			 'LS':'j',
 			 'MD':'v',
 			 'NN':'n',
-			 #'NNP'
-			 #'NNPS'
+			 'NNP':'n',
+			 'NNPS':'n',
 			 'NNS':'n', #名词复数，需要stem一次
 			 'PDT':'d',
 			 #POS
@@ -410,8 +414,8 @@ WRB: Wh-adverb
 			 'LS':0,
 			 'MD':0,
 			 'NN':0,
-			 #'NNP'
-			 #'NNPS'
+			 'NNP':0,
+			 'NNPS':1,
 			 'NNS':1, #名词复数，需要stem一次
 			 'PDT':0,
 			 #POS
@@ -437,44 +441,71 @@ WRB: Wh-adverb
 			 #'\'\'':
 		}
 		
+		emptyStr = ""
 		complexStem = [
-			['r', r'.+ly\b', r'j', r'ly\b'],
-			['j', r'.+ful\b', r'n', r'ful\b'],
-			['n', r'.+fulness\b', r'n|v|j', r'fulness\b'],
-			['n', r'.+ness\b', r'j', r'ness\b'],
-			['n', r'.+ment\b', r'v', r'ment\b'] # eg: infringement -> infringe
+			['r', r'.+ly\b', emptyStr, r'j', r'ly\b'],
+			['j', r'.+ful\b', emptyStr, r'n', r'ful\b'],
+			['n', r'.+fulness\b', emptyStr,  r'n|v|j', r'fulness\b'],
+			['n', r'.+ness\b', emptyStr, r'j', r'ness\b'],
+			['n', r'.+ment\b', emptyStr, r'v', r'ment\b'], # eg: infringement -> infringe
+			['n', r'.+tion\b', "te", r'v',  r'tion\b'], # extenuation -> extenuate, commiseration -> commiserate
+			['j|n', r'.+ing\b',  emptyStr, r'v', r'ing\b'], # palpitaging -> palpitates,   (smirking, n) -> (smirk, v)
+			['j', r'.+ed\b',  emptyStr, r'v', r'ed\b'], # tangled -> tangle
+			['n', r'.+ility\b', "le", r'j', r'ility\b'], # irascibility -> irascible
+			
 		]
 		
 		(word, Pos) = wordAndPos
 		word = word.lower()
 		if (Pos in longPos2ShortPos):
+					
+			if (word in self.wordsInfo):  # word is an GRE or Tofel word. 
+				p = longPos2ShortPos[Pos]
+				if (re.search(p, self.wordsInfo[word])):  # for "(palings, NNS)", will return (palings, n), because palings is in GRE-words, while paling is not.
+					return (word, p)
+				else:   # sometims NLTK return incorrect POS, for example, NLTK input is (grotesque, n), but "grotesque" is an adjective in GRE. The method for this, is to return an arbitrary pos of this word in GRE.
+					logging.debug("(%s, %s) -> (%s, %s)" % (word, Pos, word, self.wordsInfo[word][0]))
+					return (word, self.wordsInfo[word][0]) # 为了最大限度的统计GRE/Tofel词汇的频率，所以对于GRE/Tofel的单词，即使POS不一致，也返回.
+	
 			if (Pos in simpleStem and simpleStem[Pos] > 0):
 				if (word in self.cocaDict):
 					(oldword, word) = (word, self.cocaDict[word])
 					Pos = longPos2ShortPos[Pos]
 					logging.debug("(%s, %s) -> %s" % (oldword, Pos, word))
+				elif (word in self.cocaMainWord):
+					Pos = longPos2ShortPos[Pos]
 				else:
 					raise NoWordInDict # "No Word avaiilable"
 			else:
 				Pos = longPos2ShortPos[Pos]
-				
+			
+			# for "(doggedly, adv)", will have (dogged, j) here, if not handled it inadvance, will finally get (dog, n)
+			if (word in self.wordsInfo): # word is an GRE or Tofel word. 
+				if (re.search(Pos, self.wordsInfo[word])): 
+					return (word, Pos)
+				else:
+					logging.debug("(%s, %s) -> (%s, %s)" % (word, Pos, word, self.wordsInfo[word][0]))
+					return (word, self.wordsInfo[word][0]) # 为了最大限度的统计GRE/Tofel词汇的频率，所以对于GRE/Tofel的单词，即使POS不一致，也返回.
+			
 			for trans in complexStem:
-				if (Pos == trans[0]  and  # 词性
-					 re.match(trans[1], word) and  # 匹配正则表达式
-					 (re.sub(trans[3], "", word) in self.cocaDict or re.sub(trans[3], "", word) in self.cocaMainWord) and  # 将词缀抹去，该词在字典中
-					 (re.match(trans[2], self.cocaWordsInfo.get(re.sub(trans[3], "", word), "")) or re.sub(trans[3], "", word)+"$"+trans[2] in self.wordsInfo)
+				(fromPos, wordRe, subsTo, toPos, suffixRe) = trans
+				transNewWord = re.sub(suffixRe, subsTo, word)				
+				if (re.search(Pos, fromPos)  and  # 词性
+					 re.match(wordRe, word) and  # 匹配正则表达式
+					 (transNewWord in self.cocaDict or transNewWord in self.cocaMainWord) and  # 将词缀抹去，该词在字典中
+					 (re.search(toPos, self.cocaWordsInfo.get(transNewWord, "")) or transNewWord+"$"+toPos in self.wordsInfo)
 					 ):
-					 	(oldword, word) = (word, re.sub(trans[3], "", word))
-					 	(oldPos, Pos) = (Pos, trans[2])
+					 	(oldword, word) = (word, transNewWord)
+					 	(oldPos, Pos) = (Pos, toPos)
 					 	logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
-				elif (Pos == trans[0]  and  # 词性
-				   re.match(trans[1], word) and  # 匹配正则表达式
+				elif (re.search(Pos, fromPos)  and  # 词性
+				   re.match(wordRe, word) and  # 匹配正则表达式
 				   word in self.cocaDict and  # 存在词转换映射
-				   (re.match(trans[2], self.cocaWordsInfo.get(self.cocaDict[word], "")) or self.cocaDict[word]+"$"+trans[2] in self.wordsInfo) and # 转换词满足词性
-				   not re.match(trans[1], self.cocaDict[word]) # 词缀 在 转换词中已经被去掉了 
+				   (re.search(toPos, self.cocaWordsInfo.get(self.cocaDict[word], "")) or self.cocaDict[word]+"$"+toPos in self.wordsInfo) and # 转换词满足词性
+				   not re.search(wordRe, self.cocaDict[word]) # 词缀 在 转换词中已经被去掉了 
 				   ):
 					(oldword, word) = (word, self.cocaDict[word])
-					(oldPos, Pos) = (Pos, trans[2])
+					(oldPos, Pos) = (Pos, toPos)
 					logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
 				else:
 					continue
