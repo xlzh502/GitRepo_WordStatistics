@@ -28,6 +28,7 @@ class DictStemmer(object):
 	__DictFile="2+2lemma.txt"
 	__COCAFile="COCA 60000 Words Freq.txt"
 	__GRE="gre words.txt"
+	__GRENEW="GRE word NEW.txt" #这个是 GRE乱序版 ISBN: 978-7-80256-468-8
 	__Tofel="tofel words.txt"
 
 	wordR = r"[a-zA-Z\-]+"
@@ -56,7 +57,18 @@ class DictStemmer(object):
 	Tofel1stLineR=Template(r'''($digitR)$spaceR($wordR)$spaceR($TofelPosDescR)$spaceR([^a-zA-Z]+)''').substitute(locals())
 	Tofel2ndLineR=Template(r'''($digitR)$spaceR($TofelPosDescR)$spaceR([^a-zA-Z]+)''').substitute(locals())
 	
-	LongPos2CocaPos = {'a':'j', 'adj':'j', 'vt':'v', 'vi':'v', 'adv':'r', 'n':'n', 'prep':'i','conj':'c', 'v':'v'}
+	LongPos2CocaPos = {'a':'j', 'adj':'j', 'vt':'v', 'vi':'v', 'adv':'r', 'n':'n', 'prep':'i','conj':'c', 'v':'v', 'num':'n', 'interj':'c'}
+	
+	
+	GreGreenBookChap1stWord=[# 将单词 映射到 绿皮书中的章号
+												 'unidimensional', 'evergreen' , 'misalliance', 'aesthetic' , 'wanderlust', 'atheist',
+                         'sporadic'      , 'gratuitous', 'notable'    , 'collateral', 'assiduous' , 'prohibit', 
+                         'improvised'    , 'overpower' , 'genre'      , 'inimitable', 'suffragist', 'beleaguer',
+                         'censure'       , 'outlast'   , 'chantey'    , 'infest'    , 'gusher'    , 'agile',
+                         'traverse'      , 'schematize', 'shove'      , 'lapse'     , 'inspired'  , 'wage',
+                         'disproof'      , 'stroke'    , 'warehouse'  , 'inculcate' , 'dictator'  , 'crackpot',
+                         'monopoly'      , 'somnolent' , 'suspicion'  , 'jingoism'  , 'infantry'  , 'stab',
+                         'egotist'       ]
 	
 	def __new__(cls, *args, **dw):
 		DictStemmer.L.acquire_lock()
@@ -81,6 +93,8 @@ class DictStemmer(object):
 		self.cocaWordsInfo = {}
 		self.cocaWordsFreq = {}
 		self.WordsMeaning = {}
+		
+		self.GreenBookWord2ChapId = {} # 将单词 映射到 绿皮书中的章号
 		
 		self.__readDictFile()
 		self.__readCOCA()
@@ -131,7 +145,7 @@ class DictStemmer(object):
 			elif (re.match(DictStemmer.secondLineR, line)):
 				self.__DictFile_2ndLine(line, currWord)
 			else:
-				logging.warning("DICT line is not recognizable: %s" % line)
+				logging.getLogger('DictStemmer').debug("DICT line is not recognizable: %s" % line)
 				assert(0)
 		f.close()
 	
@@ -147,7 +161,7 @@ class DictStemmer(object):
 				self.cocaWordsInfo[curWord] = self.cocaWordsInfo.get(curWord,"") + pos
 				self.cocaWordsFreq[curWord + "$" + pos] = freq
 			else:
-				logging.warning("COCA line is not recognizable: %s" % line)
+				logging.getLogger('DictStemmer').debug("COCA line is not recognizable: %s" % line)
 				assert(0)
 		f.close()
 				
@@ -158,31 +172,63 @@ class DictStemmer(object):
 			try:
 				p = self.LongPos2CocaPos[p]
 			except KeyError:
-				logging.warning("Can't map %s to (%s, %s)" % (chinese, curWord, pos))
+				logging.getLogger('DictStemmer').debug("Can't map %s to (%s, %s)" % (chinese, curWord, pos))
 				continue
 			assert(len(p) == 1)
 			#if (len(self.WordsMeaning.get(curWord + "$" + p, "")) < len(chinese)): # 取较长的那个译文
 			#	self.WordsMeaning[curWord + "$" + p] = chinese
-			self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
+			if (curWord+'$'+p not in self.WordsMeaning):
+				self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
+			#self.WordsMeaning[curWord + "$" + p] = self.WordsMeaning.get(curWord + "$" + p, "") + chinese
 			self.wordsInfo[curWord + "$" + p] = self.wordsInfo.get(curWord + "$" + p,"") + comment
 			if (not re.search(p, self.wordsInfo.get(curWord, ""))):
 				self.wordsInfo[curWord] = self.wordsInfo.get(curWord, "") + p
 		
 	
+#	def __analyzeMeaning(self, line, curWord, comment):
+#		posRe = r"[a-zA-Z\./]+"
+#		chineseRe = r"(?:[^a-zA-Z\.]+)"
+#		itemsR = Template(r'''($posRe)($chineseRe)''').substitute(locals())
+#		
+#		line = line.strip()
+#		lineItems = re.findall(itemsR, line)
+#		for item in lineItems:
+#			pos = item[0]
+#			chinese = item[1]
+#			self.__doMap(pos, chinese, curWord, comment)
+
+
 	def __analyzeMeaning(self, line, curWord, comment):
-		posRe = r"[a-zA-Z\./]+"
-		chineseRe = r"(?:[^a-zA-Z\.]+)"
+		'''处理这样的行： a./adv. 释义之一 n. 释义之二 '''
+		denoteRe = r"(?:adj|adv|vt|vi|v|n|prep|conj|a|num|interj)\."
+		posRe = Template(r'''$denoteRe(?:/$denoteRe)*''').substitute(locals())   # 词性 n./adj.
+		chineseRe = Template(r'''.+?(?=$posRe|\Z)''').substitute(locals()) # 夹在两个词性之间的释义,最后一个释义是字符串结束 n. abcabc  v. 
 		itemsR = Template(r'''($posRe)($chineseRe)''').substitute(locals())
-		
+				
 		line = line.strip()
 		lineItems = re.findall(itemsR, line)
 		for item in lineItems:
 			pos = item[0]
 			chinese = item[1]
 			self.__doMap(pos, chinese, curWord, comment)
-
 	
 	def __readGre(self):
+		f = open(DictStemmer.__GRENEW, "r",encoding="utf_8")
+		chapId = 0
+		for line in f:
+			match1stLine = re.match(DictStemmer.Gre1stLineR, line)
+			match2ndLine = re.match(DictStemmer.Gre2ndLineR, line)
+			if (match1stLine):
+				curWord = match1stLine.group(0)
+				if (curWord in self.GreGreenBookChap1stWord):
+					chapId += 1
+				self.GreenBookWord2ChapId[curWord]=chapId
+			elif (match2ndLine):
+				self.__analyzeMeaning(line, curWord, "K")
+			else:
+				logging.getLogger('DictStemmer').debug("GRE line is not recognizable: %s" % line)
+		f.close()	
+		
 		f = open(DictStemmer.__GRE, "r",encoding="utf_8")
 		for line in f:
 			match1stLine = re.match(DictStemmer.Gre1stLineR, line)
@@ -192,7 +238,7 @@ class DictStemmer(object):
 			elif (match2ndLine):
 				self.__analyzeMeaning(line, curWord, "G")
 			else:
-				logging.warning("GRE line is not recognizable: %s" % line)
+				logging.getLogger('DictStemmer').debug("GRE line is not recognizable: %s" % line)
 		f.close()
 
 
@@ -213,7 +259,7 @@ class DictStemmer(object):
 				chinese = match2nd.group(3)
 				self.__analyzeMeaning(posDesc + chinese, curWord, "T")
 			else:
-				logging.warning("TOFEL line is not recognizable: %s" % line)
+				logging.getLogger('DictStemmer').debug("TOFEL line is not recognizable: %s" % line)
 				continue
 	
 
@@ -452,7 +498,8 @@ WRB: Wh-adverb
 			['j|n', r'.+ing\b',  emptyStr, r'v', r'ing\b'], # palpitaging -> palpitates,   (smirking, n) -> (smirk, v)
 			['j', r'.+ed\b',  emptyStr, r'v', r'ed\b'], # tangled -> tangle
 			['n', r'.+ility\b', "le", r'j', r'ility\b'], # irascibility -> irascible
-			
+			['n', r'.+or\b', "e", r'v', r'or\b'], # incinuator -> incinuate
+			['n', r'.+er\b', emptyStr, r'v', r'er\b'], # decanter -> decant
 		]
 		
 		(word, Pos) = wordAndPos
@@ -464,14 +511,14 @@ WRB: Wh-adverb
 				if (re.search(p, self.wordsInfo[word])):  # for "(palings, NNS)", will return (palings, n), because palings is in GRE-words, while paling is not.
 					return (word, p)
 				else:   # sometims NLTK return incorrect POS, for example, NLTK input is (grotesque, n), but "grotesque" is an adjective in GRE. The method for this, is to return an arbitrary pos of this word in GRE.
-					logging.debug("(%s, %s) -> (%s, %s)" % (word, Pos, word, self.wordsInfo[word][0]))
+					logging.getLogger('DictStemmer').debug("(%s, %s) -> (%s, %s)" % (word, Pos, word, self.wordsInfo[word][0]))
 					return (word, self.wordsInfo[word][0]) # 为了最大限度的统计GRE/Tofel词汇的频率，所以对于GRE/Tofel的单词，即使POS不一致，也返回.
 	
 			if (Pos in simpleStem and simpleStem[Pos] > 0):
 				if (word in self.cocaDict):
 					(oldword, word) = (word, self.cocaDict[word])
 					Pos = longPos2ShortPos[Pos]
-					logging.debug("(%s, %s) -> %s" % (oldword, Pos, word))
+					logging.getLogger('DictStemmer').debug("(%s, %s) -> %s" % (oldword, Pos, word))
 				elif (word in self.cocaMainWord):
 					Pos = longPos2ShortPos[Pos]
 				else:
@@ -484,7 +531,7 @@ WRB: Wh-adverb
 				if (re.search(Pos, self.wordsInfo[word])): 
 					return (word, Pos)
 				else:
-					logging.debug("(%s, %s) -> (%s, %s)" % (word, Pos, word, self.wordsInfo[word][0]))
+					logging.getLogger('DictStemmer').debug("(%s, %s) -> (%s, %s)" % (word, Pos, word, self.wordsInfo[word][0]))
 					return (word, self.wordsInfo[word][0]) # 为了最大限度的统计GRE/Tofel词汇的频率，所以对于GRE/Tofel的单词，即使POS不一致，也返回.
 			
 			for trans in complexStem:
@@ -497,7 +544,7 @@ WRB: Wh-adverb
 					 ):
 					 	(oldword, word) = (word, transNewWord)
 					 	(oldPos, Pos) = (Pos, toPos)
-					 	logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
+					 	logging.getLogger('DictStemmer').debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
 				elif (re.search(Pos, fromPos)  and  # 词性
 				   re.match(wordRe, word) and  # 匹配正则表达式
 				   word in self.cocaDict and  # 存在词转换映射
@@ -506,7 +553,7 @@ WRB: Wh-adverb
 				   ):
 					(oldword, word) = (word, self.cocaDict[word])
 					(oldPos, Pos) = (Pos, toPos)
-					logging.debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
+					logging.getLogger('DictStemmer').debug("(%s, %s) -> (%s, %s)" % (oldword, oldPos, word, Pos))
 				else:
 					continue
 			return (word, Pos)
