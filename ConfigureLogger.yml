@@ -1,0 +1,559 @@
+﻿# coding: utf-8
+# filename: ConfigureLogger.yml
+ 
+version: 1
+formatters:
+  simple:
+    format: '%(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: simple
+    level   : NOTSET
+    stream  : ext://sys.stdout
+  synonymAnalize:
+    class: logging.FileHandler
+    formatter: simple
+    level   : CRITICAL
+    filename: log/synoymAnalyzer.log
+  synonymAnalizeDbg:
+    class: logging.FileHandler
+    formatter: simple
+    level   : DEBUG
+    filename: log/synoymAnalyzer.debug.log
+  CoverageInfo:
+    class: logging.FileHandler
+    formatter: simple
+    level   : INFO
+    filename: log/coverage.log
+  Vocabulary:
+    class: logging.FileHandler
+    formatter: simple
+    level   : DEBUG
+    filename: log/vocabulary.log
+  VocabularyTest:
+    class: logging.FileHandler
+    formatter: simple
+    level   : DEBUG
+    filename: log/vocabularyTest.log
+  Remaining:
+    class: logging.FileHandler
+    formatter: simple
+    level   : NOTSET
+    filename: log/log.log  
+  Stemmer:
+    class: logging.FileHandler
+    formatter: simple
+    level   : NOTSET
+    filename: log/stemmer.log  
+  CnnNews:
+    class: logging.FileHandler
+    formatter: simple
+    level   : NOTSET
+    filename: YuLiaoKu/CNN.txt 
+  CNN:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/CNN.log
+  Gone with the wind:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Gone with the wind.log
+  pride and prejudice:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/pride and prejudice.log
+  david copperfield:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/david copperfield.log
+  Emma:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Emma.log
+  hard times:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/hard times.log
+  Jane Eyre:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Jane Eyre.log
+  lord jim:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/lord jim.log
+  Mansfield Park:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Mansfield Park.log
+  martin chuzzlewit:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/martin chuzzlewit.log
+  Northanger Abbey:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Northanger Abbey.log
+  oliver twist:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/oliver twist.log
+  Persuasion:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Persuasion.log
+  sense and sensibility:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/sense and sensibility.log
+  Sister Carrie:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Sister Carrie.log
+  sons and lovers:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/sons and lovers.log
+  Tess of the Urbervilles:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Tess of the Urbervilles.log
+  the adventure of tom sawyer:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/the adventure of tom sawyer.log
+  The count of monte Cristo:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The count of monte Cristo.log
+  the mayor of casterbridge:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/the mayor of casterbridge.log
+  the moonstone:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/the moonstone.log
+  the return of the native:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/the return of the native.log
+  Treasure Island:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Treasure Island.log
+  Wuthering Heights:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Wuthering Heights.log
+  the Adventures of Huckleberry Finn:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/the Adventures of Huckleberry Finn.log
+  Lost Horizon:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Lost Horizon.log
+  The sun also rises:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The sun also rises.log
+  The old man and the sea:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The old man and the sea.log
+  The Life of the Bee:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The Life of the Bee.log
+  A tale of two cities:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/A tale of two cities.log
+  Agnes Grey:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Agnes Grey.log
+  The call of the wild:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The call of the wild.log
+  White fang:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/White fang.log
+  The sea wolf:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The sea wolf.log
+  An inquiry into the nature and causes of the wealth of nations:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/An inquiry into the nature and causes of the wealth of nations.log
+  A collection of english language children's literature:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/A collection of english language children's literature.log
+  My Life by Bill Clinton:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/My Life by Bill Clinton.log
+  The Client:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The Client.log
+  The Lincoln Lawyer:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The Lincoln Lawyer.log
+  A complete collection of tails by Edgar Allan Poe:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/A complete collection of tails by Edgar Allan Poe.log
+  Sophie's World:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Sophie's World.log
+  The Help:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The Help.log
+  Water for elephants:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Water for elephants.log
+  Atlas Shrugged:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Atlas Shrugged.log
+  The Fountainhead:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The Fountainhead.log
+  The Godfather:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The Godfather.log
+  One Hundred Years Of Solitude:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/One Hundred Years Of Solitude.log
+  Under the Dome:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Under the Dome.log
+  Kite Runner:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Kite Runner.log
+  To Kill A Mockingbird:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/To Kill A Mockingbird.log
+  The Storied Life of A. J. Fikry:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/The Storied Life of A. J. Fikry.log
+  selected short stories of O Henry:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/selected short stories of O Henry.log
+  Lord of the flies:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Lord of the flies.log
+ 
+loggers:
+  synonymAnalizer:
+    level: NOTSET
+    handlers: [synonymAnalize, synonymAnalizeDbg]
+    propagate: no
+  Coverage:
+    level: NOTSET
+    handlers: [console,CoverageInfo]
+    propagate: no
+  Voc:
+    level: NOTSET
+    handlers: [Vocabulary]
+    propagate: no
+  VocTest:
+    level: NOTSET
+    handlers: [VocabularyTest]
+    propagate: no
+  DictStemmer:
+    level: NOTSET
+    handlers: [Stemmer]
+    propagate: no
+  CNNText:
+    level: NOTSET
+    handlers: [CnnNews]
+    propagate: no
+  CNN:
+    level: NOTSET
+    handlers: [CNN]
+    propagate: no
+  Gone with the wind:
+    level: NOTSET
+    handlers: [Gone with the wind]
+    propagate: no
+  pride and prejudice:
+    level: NOTSET
+    handlers: [pride and prejudice]
+    propagate: no
+  david copperfield:
+    level: NOTSET
+    handlers: [david copperfield]
+    propagate: no
+  Emma:
+    level: NOTSET
+    handlers: [Emma]
+    propagate: no
+  hard times:
+    level: NOTSET
+    handlers: [hard times]
+    propagate: no
+  Jane Eyre:
+    level: NOTSET
+    handlers: [Jane Eyre]
+    propagate: no
+  lord jim:
+    level: NOTSET
+    handlers: [lord jim]
+    propagate: no
+  Mansfield Park:
+    level: NOTSET
+    handlers: [Mansfield Park]
+    propagate: no
+  martin chuzzlewit:
+    level: NOTSET
+    handlers: [martin chuzzlewit]
+    propagate: no
+  Northanger Abbey:
+    level: NOTSET
+    handlers: [Northanger Abbey]
+    propagate: no
+  oliver twist:
+    level: NOTSET
+    handlers: [oliver twist]
+    propagate: no
+  Persuasion:
+    level: NOTSET
+    handlers: [Persuasion]
+    propagate: no
+  sense and sensibility:
+    level: NOTSET
+    handlers: [sense and sensibility]
+    propagate: no
+  Sister Carrie:
+    level: NOTSET
+    handlers: [Sister Carrie]
+    propagate: no
+  sons and lovers:
+    level: NOTSET
+    handlers: [sons and lovers]
+    propagate: no
+  Tess of the Urbervilles:
+    level: NOTSET
+    handlers: [Tess of the Urbervilles]
+    propagate: no
+  the adventure of tom sawyer:
+    level: NOTSET
+    handlers: [the adventure of tom sawyer]
+    propagate: no
+  The count of monte Cristo:
+    level: NOTSET
+    handlers: [The count of monte Cristo]
+    propagate: no
+  the mayor of casterbridge:
+    level: NOTSET
+    handlers: [the mayor of casterbridge]
+    propagate: no
+  the moonstone:
+    level: NOTSET
+    handlers: [the moonstone]
+    propagate: no
+  the return of the native:
+    level: NOTSET
+    handlers: [the return of the native]
+    propagate: no
+  Treasure Island:
+    level: NOTSET
+    handlers: [Treasure Island]
+    propagate: no
+  Wuthering Heights:
+    level: NOTSET
+    handlers: [Wuthering Heights]
+    propagate: no
+  the Adventures of Huckleberry Finn:
+    level: NOTSET
+    handlers: [the Adventures of Huckleberry Finn]
+    propagate: no
+  Lost Horizon:
+    level: NOTSET
+    handlers: [Lost Horizon]
+    propagate: no
+  The sun also rises:
+    level: NOTSET
+    handlers: [The sun also rises]
+    propagate: no
+  The old man and the sea:
+    level: NOTSET
+    handlers: [The old man and the sea]
+    propagate: no
+  The Life of the Bee:
+    level: NOTSET
+    handlers: [The Life of the Bee]
+    propagate: no
+  A tale of two cities:
+    level: NOTSET
+    handlers: [A tale of two cities]
+    propagate: no
+  Agnes Grey:
+    level: NOTSET
+    handlers: [Agnes Grey]
+    propagate: no
+  The call of the wild:
+    level: NOTSET
+    handlers: [The call of the wild]
+    propagate: no
+  White fang:
+    level: NOTSET
+    handlers: [White fang]
+    propagate: no
+  The sea wolf:
+    level: NOTSET
+    handlers: [The sea wolf]
+    propagate: no
+  An inquiry into the nature and causes of the wealth of nations:
+    level: NOTSET
+    handlers: [An inquiry into the nature and causes of the wealth of nations]
+    propagate: no
+  A collection of english language children's literature:
+    level: NOTSET
+    handlers: [A collection of english language children's literature]
+    propagate: no
+  My Life by Bill Clinton:
+    level: NOTSET
+    handlers: [My Life by Bill Clinton]
+    propagate: no
+  The Client:
+    level: NOTSET
+    handlers: [The Client]
+    propagate: no
+  The Lincoln Lawyer:
+    level: NOTSET
+    handlers: [The Lincoln Lawyer]
+    propagate: no
+  A complete collection of tails by Edgar Allan Poe:
+    level: NOTSET
+    handlers: [A complete collection of tails by Edgar Allan Poe]
+    propagate: no
+  Sophie's World:
+    level: NOTSET
+    handlers: [Sophie's World]
+    propagate: no
+  The Help:
+    level: NOTSET
+    handlers: [The Help]
+    propagate: no
+  Water for elephants:
+    level: NOTSET
+    handlers: [Water for elephants]
+    propagate: no
+  Atlas Shrugged:
+    level: NOTSET
+    handlers: [Atlas Shrugged]
+    propagate: no
+  The Fountainhead:
+    level: NOTSET
+    handlers: [The Fountainhead]
+    propagate: no
+  The Godfather:
+    level: NOTSET
+    handlers: [The Godfather]
+    propagate: no
+  One Hundred Years Of Solitude:
+    level: NOTSET
+    handlers: [One Hundred Years Of Solitude]
+    propagate: no
+  Under the Dome:
+    level: NOTSET
+    handlers: [Under the Dome]
+    propagate: no
+  Kite Runner:
+    level: NOTSET
+    handlers: [Kite Runner]
+    propagate: no
+  To Kill A Mockingbird:
+    level: NOTSET
+    handlers: [To Kill A Mockingbird]
+    propagate: no
+  The Storied Life of A. J. Fikry:
+    level: NOTSET
+    handlers: [The Storied Life of A. J. Fikry]
+    propagate: no
+  selected short stories of O Henry:
+    level: NOTSET
+    handlers: [selected short stories of O Henry]
+    propagate: no
+  Lord of the flies:
+    level: NOTSET
+    handlers: [Lord of the flies]
+    propagate: no
+root:
+  level: NOTSET
+  handlers: [console,Remaining]
