@@ -17,7 +17,7 @@ import codecs
 
 #logging.basicConfig(format='%(levelname)s:%(message)s',  filename="c:\\GRE 词频统计\\logging.txt", filemode='w', level=logging.DEBUG)
 #logging.basicConfig(format='%(message)s',  filename="c:\\GRE 词频统计\\finalResult.txt", filemode='w', level=logging.CRITICAL)
-with codecs.open(".\\ConfigureLogger.yml", 'r', 'utf-8') as f:
+with codecs.open("./ConfigureLogger.yml", 'r', 'utf-8') as f:
 	D=yaml.load(f)
 	logging.config.dictConfig(D)
 
@@ -33,11 +33,11 @@ def getChapID(strs):
          "XXXI" : 31, "XXXII" : 32, "XXXIII" : 33, "XXXIV" : 34, "XXXV" : 35, "XXXVI" : 36, "XXXVII" : 37, "XXXVIII" : 38, "XXXIX" : 39, "XL" : 40,
          "XLI" : 41, "XLII" : 42, "XLIII" : 43, "XLIV" : 44, "XLV" : 45, "XLVI" : 46, "XLVII" : 47, "XLVIII" : 48, "XLIX" : 49, "L" : 50, 
          "LI" : 51, "LII" : 52, "LIII" : 53, "LIV" : 54, "LV" : 55, "LVI" : 56, "LVII" : 57, "LVIII" : 58, "LIX" : 59, "LX" : 60, 
-         "LXI" : 61, "LXII" : 62, "LXIII" : 63, "" : None}
+         "LXI" : 61, "LXII" : 62, "LXIII" : 63, "LXIV" : 64, "LXV" : 65, "LXVI" : 66, "LXVII" : 67, "LXVIII" : 68, "" : None}
 	volId, chapId = ("", "")
 	
 	volumnReXp=r'''\s*
-               (?:VOLUME|VOL\.|BOOK)  # VOLUME  VOL.
+               (?:VOLUMN|VOLUME|VOL\.|BOOK)  # VOLUMN  VOL.
                [ ]               # spaces
                ([IVXL]+)         # VOL. I.
                
@@ -115,7 +115,7 @@ NovelList = [
 						['An inquiry into the nature and causes of the wealth of nations.txt',  'utf_8_sig'],
 						["A collection of english language children's literature.txt", 'gbk'],
 						['My Life by Bill Clinton.txt', 'utf_8_sig'], # 先排除这个长篇
-						['The Client.txt','utf_8_sig'],
+						['The client.txt','utf_8_sig'],
 						['The Lincoln Lawyer.txt','utf_8_sig'],
 						['A complete collection of tails by Edgar Allan Poe.txt','gbk'],
 						#['East of Eden.txt','latin_1'],
@@ -132,6 +132,9 @@ NovelList = [
 						["To Kill A Mockingbird.txt", 'latin_1'],
 						["The Storied Life of A. J. Fikry.txt", 'utf_8_sig'],
 						['selected short stories of O Henry.txt', 'utf_8_sig'],
+						['Gennie Gerhardt.txt', 'utf_8_sig'],
+						['Ulysses.txt', 'utf_8_sig'],
+						['Vanity Fair.txt', 'utf_8_sig'],
             ]
 
 
@@ -177,7 +180,7 @@ def getChapMaps(bookName, enc):
 										^(?:$chapReXp)
 										)''').substitute(locals())
 	try:
-		txtFile = open(str('C:\\GRE 词频统计\\YuLiaoKu\\') + bookName, 'rt', encoding = enc)
+		txtFile = open(str('./YuLiaoKu/') + bookName, mode = 'rt', encoding = enc)
 	except ValueError:
 		print("Open <%s> error." % bookName)
 	raw=txtFile.read()
@@ -341,8 +344,8 @@ def getSynonyms(wordPos, symSet1, symSet2, wordPosInterested, sortFunc):
 
 starttime = datetime.now()
 stemmer = DictStemmer()
-synonymSet1 = SynonyAnalyzer(".\\DUMP Oxford Synonyms.txt").startParse()
-synonymSet2 = SynonyAnalyzer(".\\DUMP Soule's Dictionary of English Synonyms.txt").startParse()
+synonymSet1 = SynonyAnalyzer("./DUMP Oxford Synonyms.txt").startParse()
+synonymSet2 = SynonyAnalyzer("./DUMP Soule's Dictionary of English Synonyms.txt").startParse()
 endtime = datetime.now()
 logging.info("Stemmer initialized: %d s" % (endtime - starttime).seconds)
 

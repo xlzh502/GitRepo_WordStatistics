@@ -243,7 +243,7 @@ class DictStemmer(object):
 
 
 	def __readTofel(self):
-		f = open(DictStemmer.__Tofel, "r")
+		f = open(DictStemmer.__Tofel, "r", encoding="utf_8")
 		for line in f:
 			match1st = re.match(DictStemmer.Tofel1stLineR, line)
 			match2nd = re.match(DictStemmer.Tofel2ndLineR, line)

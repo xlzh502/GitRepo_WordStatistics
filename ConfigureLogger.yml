@@ -316,6 +316,21 @@ handlers:
     formatter: simple
     level:    NOTSET
     filename: log/Lord of the flies.log
+  Gennie Gerhardt:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Gennie Gerhardt.log
+  Ulysses:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Ulysses.log
+  Vanity Fair:
+    class: logging.FileHandler
+    formatter: simple
+    level:    NOTSET
+    filename: log/Vanity Fair.log
  
 loggers:
   synonymAnalizer:
@@ -553,6 +568,18 @@ loggers:
   Lord of the flies:
     level: NOTSET
     handlers: [Lord of the flies]
+    propagate: no
+  Gennie Gerhardt:
+    level: NOTSET
+    handlers: [Gennie Gerhardt]
+    propagate: no
+  Ulysses:
+    level: NOTSET
+    handlers: [Ulysses]
+    propagate: no
+  Vanity Fair:
+    level: NOTSET
+    handlers: [Vanity Fair]
     propagate: no
 root:
   level: NOTSET
