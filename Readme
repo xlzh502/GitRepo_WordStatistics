@@ -1,0 +1,6 @@
+1.需要安装python3.5
+2.安装pip
+
+3.然后安装PyYAML和nltk:
+python3.5  -m pip  install PyYAML
+python3.5  -m pip  install nltk
